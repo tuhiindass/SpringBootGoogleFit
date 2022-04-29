@@ -50,11 +50,11 @@ public class GooglefitControler {
 	
 	private static final String APPLICATION_NAME = "fitNess";
 	
-	String clientId="945712504214-s6vg0ci486v3bouo3kjdet9733d1l9bo.apps.googleusercontent.com";
+	String clientId="286167874294-timc0s39bo6ernj98ujqsabqjir6rnc1.apps.googleusercontent.com";
 	
-	String clientSecret="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";
+	String clientSecret="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";
 	
-	String callbackUrl="http://localhost:8080/steps";
+	String callbackUrl="http://localhost:9090/steps";
 	
 	String USER_IDENTITY_KEY="userId";
 	

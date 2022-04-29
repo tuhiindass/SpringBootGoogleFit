@@ -7,10 +7,8 @@
 		<version>2.6.6</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.example.googlefit</groupId>
-	<artifactId>googlefit</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>googlefit</name>
+	<artifactId>spring-boot-docker</artifactId>
+	<name>spring-boot-docker</name>
 	<description>Demo project for Spring Boot</description>
 	<properties>
 		<java.version>11</java.version>
@@ -103,6 +101,7 @@
 				<version>2.4.0</version>
 			</plugin>
 		</plugins>
+		<finalName>spring-boot-docker</finalName>
 	</build>
 
 </project>
