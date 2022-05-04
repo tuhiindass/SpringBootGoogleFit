@@ -14,6 +14,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.joda.time.DateMidnight;
 import org.joda.time.DateTime;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,45 +44,49 @@ import com.google.api.services.fitness.model.DataSource;
 import com.google.api.services.fitness.model.Dataset;
 import com.google.api.services.fitness.model.ListDataPointChangesResponse;
 import com.google.api.services.fitness.model.ListDataSourcesResponse;
-import com.google.api.services.fitness.model.Value;
 
 @RestController
 public class GooglefitControler {
-	
-	
+
+	@Autowired
+	ElasticsearchRestTemplate eRestTemplate;
+
 	private GoogleAuthorizationCodeFlow flow;
-	
+
 	private static final String APPLICATION_NAME = "fitNess";
-	
+
 	String clientId="286167874294-timc0s39bo6ernj98ujqsabqjir6rnc1.apps.googleusercontent.com";
-	
+
 	String clientSecret="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";
-	
-	String callbackUrl="http://localhost:9090/steps";
-	
+
+	@Value("${test.url}")
+	private String callbackUrl;
+
 	String USER_IDENTITY_KEY="userId";
-	
+
 	private static final List<String> SCOPES = Collections.singletonList("https://www.googleapis.com/auth/fitness.activity.read");
 
 	private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
 	HttpTransport httpTransport = new NetHttpTransport();
-	
+
 	@PostConstruct
 	public void init() throws Exception {
-	
+
 		flow=new GoogleAuthorizationCodeFlow.Builder(httpTransport, JSON_FACTORY, clientId, clientSecret, SCOPES)
 				.setCredentialDataStore(new MemoryDataStoreFactory().getDataStore("tokens"))
 				.build();
-		 
+
 	}
-	
+
+
+
 	@RequestMapping("/index")
 	public ModelAndView home() throws Exception
 	{
 		Credential credential=flow.loadCredential(USER_IDENTITY_KEY);
 		if(credential==null) {
-			ModelAndView modelAndViewIndex = new ModelAndView();	
+			ModelAndView modelAndViewIndex = new ModelAndView();
 		    modelAndViewIndex.setViewName("index");
 		    return modelAndViewIndex;
 		}
@@ -88,22 +96,22 @@ public class GooglefitControler {
 		    return modelAndViewDashboard;
 		}
 	}
-	
+
 	@GetMapping(value={"/googleSignin"})
 	public void getFitnesData(HttpServletResponse response) throws Exception {
-		
+
 		GoogleAuthorizationCodeRequestUrl url = flow.newAuthorizationUrl();
 		String redirectUrl=url.setRedirectUri(callbackUrl).setAccessType("offline").build();
 		response.sendRedirect(redirectUrl);
-		
+
 	}
 	@GetMapping(value= {"/steps"})
 	public ModelAndView saveAuthorizationCode(HttpServletRequest request) throws Exception {
 		String code=request.getParameter("code");
 		if(code!=null) {
-			
+
 			saveToken(code);
-		
+
 		}
 		ModelAndView modelAndView = new ModelAndView();
 	    modelAndView.setViewName("dashboard");
@@ -113,13 +121,26 @@ public class GooglefitControler {
 	public ListDataSourcesResponse getDataSources() throws Exception {
 		Fitness service=fitNess();
 		Fitness.Users.DataSources.List dataSources = service.users().dataSources().list("me");
+//		ListDataSourcesResponse Ds=dataSources.execute();
+//		System.out.println(Ds);
+//		return Ds;
+		OutputStream outputStream=new FileOutputStream("GoogleFitDataSources");
+		//dataSources.executeAndDownloadTo(outputStream);
+
+		//Elasticsearch->
+//		List<DataSource> _lDs=dataSources.execute().getDataSource();
+//		IndexCoordinates indices=IndexCoordinates.of("googlefit");
+//		eRestTemplate.save(_lDs,indices);
+//
+		//System.out.println(_lDs);
 		ListDataSourcesResponse Ds=dataSources.execute();
-		System.out.println(Ds);
 		return Ds;
+
 	}
+
 	@GetMapping(value={"/getdatasets"})
-	public List<Dataset> getDataSets() throws Exception {	
-	Fitness service=fitNess();	
+	public List<Dataset> getDataSets() throws Exception {
+	Fitness service=fitNess();
 	ListDataSourcesResponse dataSourceRes=getDataSources();
 	List<DataSource> dataSources =dataSourceRes.getDataSource();
 	 List<Dataset> dataSets =new ArrayList<Dataset>();
@@ -129,24 +150,25 @@ public class GooglefitControler {
 		Dataset ds=dataSet.execute();
 		dataSets.add(ds);
 	}
-		return dataSets;		
+		return dataSets;
 	}
-	
+
 	@GetMapping(value={"/getdatapointChanges"})
-	public void getDataPoints() throws Exception {	
-	Fitness service=fitNess();	
+	public void getDataPoints() throws Exception {
+	Fitness service=fitNess();
 	ListDataSourcesResponse dataSourceRes=getDataSources();
 	List<DataSource> dataSources =dataSourceRes.getDataSource();
 	List<ListDataPointChangesResponse> dataPointChanges =new ArrayList<ListDataPointChangesResponse>();
 	for(DataSource Ds:dataSources) {
 		String dataStreamId=Ds.getDataStreamId();
+		System.out.println(dataStreamId);
 		Fitness.Users.DataSources.DataPointChanges.List dataPointChangesRes=service.users().dataSources().dataPointChanges().list("me", dataStreamId);
-		OutputStream outputStream=new FileOutputStream("GoogleFitData");
+		OutputStream outputStream=new FileOutputStream("GoogleFitDataPoint");
 		dataPointChangesRes.executeAndDownloadTo(outputStream);
 		//dataPointChanges.add(ds);
 	}
-		//return dataPointChanges;		
-	
+		//return dataPointChanges;
+
 	}
 	@GetMapping(value= {"/getdatasetsbyaggregate"})
 	public List<Dataset> getDataSetsByAggregate() throws Exception {
@@ -171,25 +193,25 @@ public class GooglefitControler {
 			     	for(AggregateBucket bucket:aggregateData) {
 			    	 List<Dataset> dataset = bucket.getDataset();
 			    	 dataSets.addAll(dataset);
-			    	 
+
 			     	}
 				}
 				System.out.println("Datasets: "+dataSets);
 				 return dataSets;
-			
+
 	      }
 	private Fitness fitNess() throws Exception {
 		Credential credential=flow.loadCredential(USER_IDENTITY_KEY);
 		System.out.println("Credential for accessToken: "+credential);
 		Fitness service = new Fitness.Builder(
-                httpTransport, 
-                JSON_FACTORY, 
+                httpTransport,
+                JSON_FACTORY,
                 credential)
                 .setApplicationName(APPLICATION_NAME)
                 .build();
 		return service;
 	}
-			    	 
+
 	private void saveToken(String code) throws Exception {
 	GoogleTokenResponse response=flow.newTokenRequest(code).setRedirectUri(callbackUrl).execute();
 	flow.createAndStoreCredential(response, USER_IDENTITY_KEY);
