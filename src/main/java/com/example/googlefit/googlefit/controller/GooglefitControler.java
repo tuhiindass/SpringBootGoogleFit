@@ -12,6 +12,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.example.googlefit.googlefit.GooglefitConstant;
 import org.joda.time.DateMidnight;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
@@ -135,6 +137,39 @@ public class GooglefitControler {
 		//System.out.println(_lDs);
 		ListDataSourcesResponse Ds=dataSources.execute();
 		return Ds;
+
+	}
+
+	@GetMapping(value= {"/dataSources"})
+	public String dataSources() throws Exception {
+		Fitness service=fitNess();
+		Fitness.Users.DataSources.List dataSources = service.users().dataSources().list("me");
+		ListDataSourcesResponse Ds=dataSources.execute();
+		List<DataSource> dataSourcesList = Ds.getDataSource();
+		String response= GooglefitConstant.HTML_BEGIN;
+		for(DataSource ds:dataSourcesList) {
+
+			response=response+"<a  href=\"/getDataStream/"+ds.getDataStreamId()+"\">"+ds.getDataStreamName()+"</a>\r\n"
+					+ "		<br>";
+		}
+		response=response+GooglefitConstant.HTML_END;
+
+		System.out.println(Ds);
+		return response;
+	}
+
+	@GetMapping(value={"/getDataStream/{id}"})
+	public ListDataPointChangesResponse dataPoints( @PathVariable String id) throws Exception {
+		Fitness service=fitNess();
+
+
+
+
+		String dataStreamId=id;
+		Fitness.Users.DataSources.DataPointChanges.List dataPointChangesRes=service.users().dataSources().dataPointChanges().list("me", dataStreamId);
+		ListDataPointChangesResponse ds=dataPointChangesRes.execute();
+
+		return ds;
 
 	}
 
