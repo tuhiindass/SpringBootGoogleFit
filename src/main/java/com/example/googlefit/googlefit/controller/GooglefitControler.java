@@ -154,7 +154,7 @@ public class GooglefitControler {
 	}
 
 	@GetMapping(value={"/getdatapointChanges"})
-	public void getDataPoints() throws Exception {
+	public List<ListDataPointChangesResponse> getDataPoints() throws Exception {
 	Fitness service=fitNess();
 	ListDataSourcesResponse dataSourceRes=getDataSources();
 	List<DataSource> dataSources =dataSourceRes.getDataSource();
@@ -163,11 +163,19 @@ public class GooglefitControler {
 		String dataStreamId=Ds.getDataStreamId();
 		System.out.println(dataStreamId);
 		Fitness.Users.DataSources.DataPointChanges.List dataPointChangesRes=service.users().dataSources().dataPointChanges().list("me", dataStreamId);
-		OutputStream outputStream=new FileOutputStream("GoogleFitDataPoint");
-		dataPointChangesRes.executeAndDownloadTo(outputStream);
+		//OutputStream outputStream=new FileOutputStream("GoogleFitDataPoint");
+		//dataPointChangesRes.executeAndDownloadTo(outputStream);
 		//dataPointChanges.add(ds);
 	}
 		//return dataPointChanges;
+
+		for(DataSource Ds:dataSources) {
+			String dataStreamId=Ds.getDataStreamId();
+			Fitness.Users.DataSources.DataPointChanges.List dataPointChangesRes=service.users().dataSources().dataPointChanges().list("me", dataStreamId);
+			ListDataPointChangesResponse ds=dataPointChangesRes.execute();
+			dataPointChanges.add(ds);
+		}
+		return dataPointChanges;
 
 	}
 	@GetMapping(value= {"/getdatasetsbyaggregate"})
