@@ -129,12 +129,17 @@ public class GooglefitControler {
 		OutputStream outputStream=new FileOutputStream("GoogleFitDataSources");
 		//dataSources.executeAndDownloadTo(outputStream);
 
+
 		//Elasticsearch->
-//		List<DataSource> _lDs=dataSources.execute().getDataSource();
-//		IndexCoordinates indices=IndexCoordinates.of("googlefit");
-//		eRestTemplate.save(_lDs,indices);
-//
-		//System.out.println(_lDs);
+		
+		List<DataSource> _lDs=dataSources.execute().getDataSource();
+		IndexCoordinates indices=IndexCoordinates.of("googlefit");
+		eRestTemplate.save(_lDs,indices);
+
+
+
+
+		System.out.println(_lDs);
 		ListDataSourcesResponse Ds=dataSources.execute();
 		return Ds;
 
