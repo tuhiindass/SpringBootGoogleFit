@@ -132,9 +132,9 @@ public class GooglefitControler {
 
 		//Elasticsearch->
 		
-//		List<DataSource> _lDs=dataSources.execute().getDataSource();
-//		IndexCoordinates indices=IndexCoordinates.of("googlefit");
-//		eRestTemplate.save(_lDs,indices);
+		List<DataSource> _lDs=dataSources.execute().getDataSource();
+		IndexCoordinates indices=IndexCoordinates.of("datasources");
+		eRestTemplate.save(_lDs,indices);
         //System.out.println(_lDs);
 		ListDataSourcesResponse Ds=dataSources.execute();
 		return Ds;
