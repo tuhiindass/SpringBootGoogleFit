@@ -131,11 +131,11 @@ public class GooglefitControler {
 
 
 		//Elasticsearch->
-		
+		System.out.println("Before saving elasticDb");
 		List<DataSource> _lDs=dataSources.execute().getDataSource();
 		IndexCoordinates indices=IndexCoordinates.of("datasources");
 		eRestTemplate.save(_lDs,indices);
-        //System.out.println(_lDs);
+                System.out.println("After saving elasticDb");
 		ListDataSourcesResponse Ds=dataSources.execute();
 		return Ds;
 
