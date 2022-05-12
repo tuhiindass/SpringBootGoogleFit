@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.example.googlefit.googlefit.GooglefitConstant;
+import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateMidnight;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +49,7 @@ import com.google.api.services.fitness.model.ListDataPointChangesResponse;
 import com.google.api.services.fitness.model.ListDataSourcesResponse;
 
 @RestController
+@Slf4j
 public class GooglefitControler {
 
 	@Autowired
@@ -131,11 +133,10 @@ public class GooglefitControler {
 
 
 		//Elasticsearch->
-		System.out.println("Before saving elasticDb");
 		List<DataSource> _lDs=dataSources.execute().getDataSource();
 		IndexCoordinates indices=IndexCoordinates.of("datasources");
 		eRestTemplate.save(_lDs,indices);
-                System.out.println("After saving elasticDb");
+		log.info("DataSource saved into Elasticsearch.");
 		ListDataSourcesResponse Ds=dataSources.execute();
 		return Ds;
 
@@ -186,6 +187,10 @@ public class GooglefitControler {
 		Dataset ds=dataSet.execute();
 		dataSets.add(ds);
 	}
+
+		IndexCoordinates indices=IndexCoordinates.of("datasets");
+		eRestTemplate.save(dataSets,indices);
+		log.info("DataSets saved into Elasticsearch.");
 		return dataSets;
 	}
 
