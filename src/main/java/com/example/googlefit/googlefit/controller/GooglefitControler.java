@@ -3,7 +3,13 @@ package com.example.googlefit.googlefit.controller;
 
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -36,7 +42,6 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.store.MemoryDataStoreFactory;
 import com.google.api.services.fitness.Fitness;
-import com.google.api.services.fitness.Fitness.Users;
 import com.google.api.services.fitness.Fitness.Users.DataSources.DataPointChanges;
 import com.google.api.services.fitness.model.AggregateBucket;
 import com.google.api.services.fitness.model.AggregateBy;
@@ -68,7 +73,11 @@ public class GooglefitControler {
 
 	String USER_IDENTITY_KEY="userId";
 
-	private static final List<String> SCOPES = Collections.singletonList("https://www.googleapis.com/auth/fitness.activity.read");
+//	private static final List<String> SCOPES = Collections.singletonList("https://www.googleapis.com/auth/fitness.activity.read");
+	private static final List<String> SCOPES = Arrays.asList(
+			"https://www.googleapis.com/auth/fitness.activity.read", 
+			"https://www.googleapis.com/auth/userinfo.email", 
+			"https://www.googleapis.com/auth/userinfo.profile");
 
 	private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
@@ -108,6 +117,7 @@ public class GooglefitControler {
 		String redirectUrl=url.setRedirectUri(callbackUrl).setAccessType("offline").build();
 		response.sendRedirect(redirectUrl);
 
+
 	}
 	@GetMapping(value= {"/steps"})
 	public ModelAndView saveAuthorizationCode(HttpServletRequest request) throws Exception {
@@ -136,7 +146,7 @@ public class GooglefitControler {
 		List<DataSource> _lDs=dataSources.execute().getDataSource();
 		IndexCoordinates indices=IndexCoordinates.of("datasources");
 		eRestTemplate.save(_lDs,indices);
-		log.info("DataSource saved into Elasticsearch.");
+//		log.info("DataSource saved into Elasticsearch.");
 		ListDataSourcesResponse Ds=dataSources.execute();
 		return Ds;
 
@@ -190,7 +200,7 @@ public class GooglefitControler {
 
 		IndexCoordinates indices=IndexCoordinates.of("datasets");
 		eRestTemplate.save(dataSets,indices);
-		log.info("DataSets saved into Elasticsearch.");
+//		log.info("DataSets saved into Elasticsearch.");
 		return dataSets;
 	}
 
@@ -260,10 +270,21 @@ public class GooglefitControler {
                 .build();
 		return service;
 	}
-
+	
 	private void saveToken(String code) throws Exception {
-	GoogleTokenResponse response=flow.newTokenRequest(code).setRedirectUri(callbackUrl).execute();
-	flow.createAndStoreCredential(response, USER_IDENTITY_KEY);
-
-}
+		GoogleTokenResponse response=flow.newTokenRequest(code).setRedirectUri(callbackUrl).execute();
+		
+		HttpClient client = HttpClient.newHttpClient();
+		String url = "https://www.googleapis.com/oauth2/v3/userinfo?access_token=" + response.getAccessToken();
+		HttpRequest request = HttpRequest.newBuilder(URI.create(url))
+				.header("accept", "application/json")
+				.build();
+	
+		HttpResponse res = client.send(request, BodyHandlers.ofString());
+	
+		//this will print the login user details
+		System.out.println(res.body());
+		flow.createAndStoreCredential(response, USER_IDENTITY_KEY);
+	
+	}
 }
