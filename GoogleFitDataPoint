@@ -1,0 +1,20 @@
+{
+  "insertedDataPoint": [
+    {
+      "startTimeNanos": "1649881321244000000",
+      "endTimeNanos": "1650211010350372000",
+      "dataTypeName": "com.google.step_count.cumulative",
+      "value": [
+        {
+          "intVal": 14748,
+          "mapVal": []
+        }
+      ],
+      "modifiedTimeMillis": "1650212164340",
+      "rawTimestampNanos": "329694118404000"
+    }
+  ],
+  "deletedDataPoint": [],
+  "nextPageToken": "xCMLv8aqIMBoWWG1SaGxNM1c0Q1p4aUwyRDNDRmpaUQ==",
+  "dataSourceId": "raw:com.google.step_count.cumulative:samsung:SM-G930F:14d4c24c:SAMSUNG Step Counter Sensor"
+}
