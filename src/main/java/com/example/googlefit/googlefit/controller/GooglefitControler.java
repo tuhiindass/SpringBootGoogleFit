@@ -3,10 +3,16 @@ package com.example.googlefit.googlefit.controller;
 
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandlers;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -14,6 +20,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.example.googlefit.googlefit.GooglefitConstant;
+import com.example.googlefit.googlefit.model.UserDataset;
+
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateMidnight;
 import org.joda.time.DateTime;
@@ -37,7 +45,6 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.store.MemoryDataStoreFactory;
 import com.google.api.services.fitness.Fitness;
-import com.google.api.services.fitness.Fitness.Users;
 import com.google.api.services.fitness.Fitness.Users.DataSources.DataPointChanges;
 import com.google.api.services.fitness.model.AggregateBucket;
 import com.google.api.services.fitness.model.AggregateBy;
@@ -48,6 +55,8 @@ import com.google.api.services.fitness.model.DataSource;
 import com.google.api.services.fitness.model.Dataset;
 import com.google.api.services.fitness.model.ListDataPointChangesResponse;
 import com.google.api.services.fitness.model.ListDataSourcesResponse;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 @RestController
 @Slf4j
@@ -68,10 +77,11 @@ public class GooglefitControler {
 	private String callbackUrl;
 
 	String USER_IDENTITY_KEY="userId";
+	UserDataset userDataset=new UserDataset();
 
-	//private static final List<String> SCOPES = Collections.singletonList("https://www.googleapis.com/auth/fitness.activity.read");
-
-	private static final List<String> SCOPES = Arrays.asList("https://www.googleapis.com/auth/fitness.activity.read",
+//	private static final List<String> SCOPES = Collections.singletonList("https://www.googleapis.com/auth/fitness.activity.read");
+	private static final List<String> SCOPES = Arrays.asList(
+			"https://www.googleapis.com/auth/fitness.activity.read",
 			"https://www.googleapis.com/auth/fitness.blood_glucose.read",
 			"https://www.googleapis.com/auth/fitness.blood_pressure.read",
 			"https://www.googleapis.com/auth/fitness.body.read",
@@ -81,8 +91,10 @@ public class GooglefitControler {
 			"https://www.googleapis.com/auth/fitness.nutrition.read",
 			"https://www.googleapis.com/auth/fitness.oxygen_saturation.read",
 			"https://www.googleapis.com/auth/fitness.reproductive_health.read",
-			"https://www.googleapis.com/auth/fitness.sleep.read"
-	);
+			"https://www.googleapis.com/auth/fitness.sleep.read",
+			"https://www.googleapis.com/auth/userinfo.email",
+			"https://www.googleapis.com/auth/userinfo.profile");
+
 	private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
 	HttpTransport httpTransport = new NetHttpTransport();
@@ -121,6 +133,7 @@ public class GooglefitControler {
 		String redirectUrl=url.setRedirectUri(callbackUrl).setAccessType("offline").build();
 		response.sendRedirect(redirectUrl);
 
+
 	}
 	@GetMapping(value= {"/steps"})
 	public ModelAndView saveAuthorizationCode(HttpServletRequest request) throws Exception {
@@ -138,11 +151,25 @@ public class GooglefitControler {
 	public ListDataSourcesResponse getDataSources() throws Exception {
 		Fitness service=fitNess();
 		Fitness.Users.DataSources.List dataSources = service.users().dataSources().list("me");
+//		ListDataSourcesResponse Ds=dataSources.execute();
+//		System.out.println(Ds);
+//		return Ds;
+		OutputStream outputStream=new FileOutputStream("GoogleFitDataSources");
+		//dataSources.executeAndDownloadTo(outputStream);
+
 
 		//Elasticsearch->
+//		List<DataSource> _lDs=dataSources.execute().getDataSource();
+//		IndexCoordinates indices=IndexCoordinates.of("datasources");
+//		eRestTemplate.save(_lDs,indices);
+//		log.info("DataSource saved into Elasticsearch.");
+		log.info("Datasets extracted from GoogleFit");
 		List<DataSource> _lDs=dataSources.execute().getDataSource();
+		userDataset.set_lDataSource(_lDs);
 		IndexCoordinates indices=IndexCoordinates.of("datasources");
-		eRestTemplate.save(_lDs,indices);
+		System.out.println(userDataset.toString());
+		eRestTemplate.save(userDataset,indices);
+
 		log.info("DataSource saved into Elasticsearch.");
 		ListDataSourcesResponse Ds=dataSources.execute();
 		return Ds;
@@ -183,37 +210,36 @@ public class GooglefitControler {
 	}
 
 	@GetMapping(value={"/getdatasets"})
-	public List<Dataset> getDataSets() throws Exception {
-		Fitness service=fitNess();
-		ListDataSourcesResponse dataSourceRes=getDataSources();
-		List<DataSource> dataSources =dataSourceRes.getDataSource();
-		List<Dataset> dataSets =new ArrayList<Dataset>();
+	public UserDataset getDataSets() throws Exception {
+		log.info("Inside getDataSets()");
+	Fitness service=fitNess();
+	ListDataSourcesResponse dataSourceRes=getDataSources();
+	List<DataSource> dataSources =dataSourceRes.getDataSource();
+	 List<Dataset> dataSets =new ArrayList<Dataset>();
 		long startTime= new DateTime().withTimeAtStartOfDay().getMillis()*1000000;
 		long endTime = DateTime.now().getMillis()*1000000;
-       //System.out.println("startTime: "+startTime);
-       //System.out.println("endTime : "+endTime);
 		String startTimeString= String.valueOf(startTime);
 		String endTimeString=String.valueOf(endTime);
 		String datasetId=startTimeString+"-"+endTimeString;
 		System.out.println("datasetId: "+datasetId);
-		for(DataSource Ds:dataSources) {
-			String dataStreamId=Ds.getDataStreamId();
-        // Fitness.Users.DataSources.Datasets.Get dataSet=service.users().dataSources().datasets().get("me", dataStreamId, "1650479400000000000-1650482111200656000");
-			Fitness.Users.DataSources.Datasets.Get dataSet=service.users().dataSources().datasets().get("me", dataStreamId, datasetId);
-			Dataset ds=dataSet.execute();
-			dataSets.add(ds);
-		}
 
+	for(DataSource Ds:dataSources) {
+		String dataStreamId=Ds.getDataStreamId();
+		//Fitness.Users.DataSources.Datasets.Get dataSet=service.users().dataSources().datasets().get("me", dataStreamId, "1650479400000000000-1650482111200656000");
+		Fitness.Users.DataSources.Datasets.Get dataSet=service.users().dataSources().datasets().get("me", dataStreamId, datasetId);
+
+		Dataset ds=dataSet.execute();
+		dataSets.add(ds);
+	}
 		log.info("Datasets extracted from GoogleFit");
+		userDataset.set_lDataSet(dataSets);
 		IndexCoordinates indices=IndexCoordinates.of("datasets");
-		eRestTemplate.save(dataSets,indices);
+		System.out.println(userDataset.toString());
+		eRestTemplate.save(userDataset,indices);
 
 		log.info("DataSets saved into Elasticsearch.");
-
-		return dataSets;
+		return userDataset;
 	}
-
-
 
 	@GetMapping(value={"/getdatapointChanges"})
 	public List<ListDataPointChangesResponse> getDataPoints() throws Exception {
@@ -281,10 +307,27 @@ public class GooglefitControler {
                 .build();
 		return service;
 	}
-
+	
 	private void saveToken(String code) throws Exception {
-	GoogleTokenResponse response=flow.newTokenRequest(code).setRedirectUri(callbackUrl).execute();
-	flow.createAndStoreCredential(response, USER_IDENTITY_KEY);
-
-}
+		GoogleTokenResponse response=flow.newTokenRequest(code).setRedirectUri(callbackUrl).execute();
+		System.out.println(response.getAccessToken());
+		HttpClient client = HttpClient.newHttpClient();
+		String url = "https://www.googleapis.com/oauth2/v3/userinfo?access_token=" + response.getAccessToken();
+		HttpRequest request = HttpRequest.newBuilder(URI.create(url))
+				.header("accept", "application/json")
+				.build();
+	
+		
+		HttpResponse res = client.send(request, BodyHandlers.ofString());
+	
+		//this will print the login user details
+		System.out.println(res.body());
+		flow.createAndStoreCredential(response, USER_IDENTITY_KEY);
+		
+		JsonObject userData = JsonParser.parseString(res.body().toString()).getAsJsonObject();
+		userDataset.setName(userData.get("name").getAsString());
+		userDataset.setEmail(userData.get("email").getAsString());
+		System.out.println(userData.get("name").getAsString());
+		System.out.println(userData.get("email").getAsString());
+	}
 }
