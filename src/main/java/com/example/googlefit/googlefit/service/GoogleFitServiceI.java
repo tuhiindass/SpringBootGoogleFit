@@ -31,4 +31,8 @@ public interface GoogleFitServiceI {
 
 	ListDataPointChangesResponse getDataPointChanges(String id) throws Exception;
 
+	String getActivityTypeList() throws Exception;
+
+	String saveAndShowActivityTypeData(String dataStreamId, String activityType) throws Exception;
+
 }

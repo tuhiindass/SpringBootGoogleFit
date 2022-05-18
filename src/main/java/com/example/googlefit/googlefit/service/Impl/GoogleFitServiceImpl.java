@@ -14,7 +14,6 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
 
-import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateMidnight;
 import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +21,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 
 import com.example.googlefit.googlefit.GooglefitConstant;
 import com.example.googlefit.googlefit.model.UserDataset;
@@ -48,6 +46,8 @@ import com.google.api.services.fitness.model.ListDataSourcesResponse;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Service
 @Slf4j
 public class GoogleFitServiceImpl implements GoogleFitServiceI{
@@ -63,6 +63,9 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 	
 	@Value("${clientSecret}")
 	private String clientSecret;
+	
+	@Value("${base.url}")
+	private String baseUrl;
 	
 	private GoogleAuthorizationCodeFlow flow;
 	
@@ -159,6 +162,41 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 
 		System.out.println(Ds);
 		return response;
+	}
+	
+	@Override
+	public String getActivityTypeList() throws Exception {
+		Fitness service=fitNess();
+		List<DataSource> dataSourcesList = service.users().dataSources().list("me").execute().getDataSource();
+		String response= GooglefitConstant.HTML_BEGIN;
+		String activityName = null;
+		for(DataSource ds:dataSourcesList) {
+			if(ds.getDataStreamName().equals("top_level")) {
+				activityName = ds.getDataType().getName().substring(11,  ds.getDataType().getName().length());
+				response=response+"<a  href=\"/saveandshow/datastreamid/"+ds.getDataStreamId()+"/activitytpye/"+ activityName +"\">"+activityName+"</a>\r\n"
+						+ "		<br>";
+			}
+		}
+		response=response+GooglefitConstant.HTML_END;
+		return response;
+	}
+	
+	@Override
+	public String saveAndShowActivityTypeData(String dataStreamId, String activityType) throws Exception {
+		System.out.println("\n\nDataStreamid : " + dataStreamId);
+		HttpClient client = HttpClient.newHttpClient();
+		
+		String url = baseUrl + "/getDataStream/" + dataStreamId;
+		HttpRequest request = HttpRequest.newBuilder(URI.create(url))
+				.header("accept", "application/json")
+				.build();
+		
+		HttpResponse res = client.send(request, BodyHandlers.ofString());
+		JsonObject dataStream = JsonParser.parseString(res.body().toString()).getAsJsonObject();
+		userDataset.setDataStream(dataStream);
+		IndexCoordinates indices=IndexCoordinates.of(activityType);
+		eRestTemplate.save(userDataset,indices);
+		return res.body().toString();
 	}
 	
 	@Override

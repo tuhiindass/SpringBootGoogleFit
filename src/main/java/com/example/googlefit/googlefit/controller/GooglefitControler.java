@@ -70,6 +70,16 @@ public class GooglefitControler {
 	public String getDataSources() throws Exception {
 		return googleFitSvc.getDataSources();
 	}
+	
+	@GetMapping(value= {"/activitytype"})
+	public String getActivityTypeList() throws Exception {
+		return googleFitSvc.getActivityTypeList();
+	}
+	
+	@GetMapping(value= {"/saveandshow/datastreamid/{id}/activitytpye/{type}"})
+	public String saveAndShowActivityType(@PathVariable String id, @PathVariable String type) throws Exception {
+		return googleFitSvc.saveAndShowActivityTypeData(id, type);
+	}
 
 	@GetMapping(value={"/getDataStream/{id}"})
 	public ListDataPointChangesResponse getDataPoints(@PathVariable String id) throws Exception {
