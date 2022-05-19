@@ -87,13 +87,23 @@ public class GooglefitControler {
 	}
 
 	@GetMapping(value={"/datasets"})
-	public UserDataset getDataSets() throws Exception {
+	public String getDataSets() throws Exception {
 		return googleFitSvc.getDataSets();
+	}
+	
+	@GetMapping(value= {"/getDataSets/datastreamid/{id}"})
+	public  Dataset getDataSetsByFiltering(@PathVariable String id ) throws Exception {
+		return googleFitSvc.getDataSetsByFiltering(id);
 	}
 
 	@GetMapping(value={"/datapointchanges"})
-	public List<ListDataPointChangesResponse> getDataPoints() throws Exception {
+	public String getDataPoints() throws Exception {
 		return googleFitSvc.getListOfDataPointChanges();
+	}
+	
+	@GetMapping(value= {"/getDataPointChanges/datastreamid/{id}"})
+	 public ListDataPointChangesResponse getDataPointChangesByFiltering(@PathVariable String id) throws Exception {
+		return googleFitSvc.getDataPointChangesByFiltering(id);
 	}
 	
 	@GetMapping(value= {"/datasetsbyaggregate"})

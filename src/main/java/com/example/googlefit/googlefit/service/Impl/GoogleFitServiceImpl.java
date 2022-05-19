@@ -137,12 +137,12 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 		Fitness service=fitNess();
 		Fitness.Users.DataSources.List dataSources = service.users().dataSources().list("me");
 		List<DataSource> _lDs=dataSources.execute().getDataSource();
-		userDataset.set_lDataSource(_lDs);
-		IndexCoordinates indices=IndexCoordinates.of("datasources");
-		System.out.println(userDataset.toString());
-		eRestTemplate.save(userDataset,indices);
+//		userDataset.set_lDataSource(_lDs);
+//		IndexCoordinates indices=IndexCoordinates.of("datasources");
+//		System.out.println(userDataset.toString());
+//		eRestTemplate.save(userDataset,indices);
 
-		log.info("DataSource saved into Elasticsearch.");
+		//log.info("DataSource saved into Elasticsearch.");
 		ListDataSourcesResponse Ds=dataSources.execute();
 		return Ds;
 	}
@@ -209,59 +209,83 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 	}
 	
 	@Override
-	public UserDataset getDataSets() throws Exception {
-		log.info("Inside getDataSets()");
+	public String getDataSets() throws Exception {
+		//log.info("Inside getDataSets()");
 		Fitness service=fitNess();
 		List<DataSource> dataSources =getDetailsDataSources().getDataSource();
-		List<Dataset> dataSets =new ArrayList<Dataset>();
+				String response= GooglefitConstant.HTML_BEGIN;
+		String activityDataType = null;
+		for(DataSource Ds:dataSources) {
+			if(Ds.getDataStreamName().equals("top_level")) {
+				System.out.println("DataStreamName:"+Ds.getDataStreamName());
+				activityDataType=Ds.getDataType().getName();
+				System.out.println("DataType:"+activityDataType);
+				response=response+"<a  href=\"/getDataSets/datastreamid/"+Ds.getDataStreamId()+"\">"+activityDataType+"</a>\r\n"
+						+ "		<br>";
+			}
+			
+		}
+		response=response+GooglefitConstant.HTML_END;
+		return response;
+		
+		//log.info("Datasets extracted from GoogleFit");
+//		userDataset.set_lDataSet(dataSets);
+//		IndexCoordinates indices=IndexCoordinates.of("datasets");
+//		System.out.println(userDataset.toString());
+//		eRestTemplate.save(userDataset,indices);
+
+		//log.info("DataSets saved into Elasticsearch.");
+//		return userDataset;
+		//return dataSets;
+	}
+	
+	@Override
+	public Dataset getDataSetsByFiltering(String id) throws Exception {
+		// TODO Auto-generated method stub
+		Fitness service=fitNess();
 		String startTimeString= String.valueOf(new DateTime().withTimeAtStartOfDay().getMillis()*1000000);
 		String endTimeString=String.valueOf(DateTime.now().getMillis()*1000000);
 		String datasetId=startTimeString+"-"+endTimeString;
 		System.out.println("datasetId: "+datasetId);
+		Fitness.Users.DataSources.Datasets.Get dataSet=service.users().dataSources().datasets().get("me", id, datasetId);
+		Dataset ds=dataSet.execute();
+		return ds;
+	}
 	
-		for(DataSource Ds:dataSources) {
-			String dataStreamId=Ds.getDataStreamId();
-			//Fitness.Users.DataSources.Datasets.Get dataSet=service.users().dataSources().datasets().get("me", dataStreamId, "1650479400000000000-1650482111200656000");
-			Fitness.Users.DataSources.Datasets.Get dataSet=service.users().dataSources().datasets().get("me", dataStreamId, datasetId);
-			Dataset ds=dataSet.execute();
-			dataSets.add(ds);
-		}
-		
-		log.info("Datasets extracted from GoogleFit");
-		userDataset.set_lDataSet(dataSets);
-		IndexCoordinates indices=IndexCoordinates.of("datasets");
-		System.out.println(userDataset.toString());
-		eRestTemplate.save(userDataset,indices);
+	
+	
+	@Override
+	public String getListOfDataPointChanges() throws Exception {
+		Fitness service=fitNess();
+		List<DataSource> dataSources =getDetailsDataSources().getDataSource();
+		String response= GooglefitConstant.HTML_BEGIN;
+		String activityDataType = null;
 
-		log.info("DataSets saved into Elasticsearch.");
-		return userDataset;
+		for(DataSource Ds:dataSources) {
+			if(Ds.getDataStreamName().equals("top_level")) {
+				System.out.println("DataStreamName:"+Ds.getDataStreamName());
+				activityDataType=Ds.getDataType().getName();
+				System.out.println("DataType:"+activityDataType);
+				response=response+"<a  href=\"/getDataPointChanges/datastreamid/"+Ds.getDataStreamId()+"\">"+activityDataType+"</a>\r\n"
+						+ "		<br>";
+			}
+		}
+		response=response+GooglefitConstant.HTML_END;
+		return response;
+
 	}
 	
 	@Override
-	public List<ListDataPointChangesResponse> getListOfDataPointChanges() throws Exception {
+	public ListDataPointChangesResponse getDataPointChangesByFiltering(String id) throws Exception {
+		// TODO Auto-generated method stub
 		Fitness service=fitNess();
-		List<DataSource> dataSources =getDetailsDataSources().getDataSource();
-		List<ListDataPointChangesResponse> dataPointChanges =new ArrayList<ListDataPointChangesResponse>();
-		
-		//WHAT IS THE PURPOSE OF THIS LOOP???
-		for(DataSource Ds:dataSources) {
-			String dataStreamId=Ds.getDataStreamId();
-			System.out.println(dataStreamId);
-			Fitness.Users.DataSources.DataPointChanges.List dataPointChangesRes=service.users().dataSources().dataPointChanges().list("me", dataStreamId);
-			//OutputStream outputStream=new FileOutputStream("GoogleFitDataPoint");
-			//dataPointChangesRes.executeAndDownloadTo(outputStream);
-			//dataPointChanges.add(ds);
-		}
-
-		for(DataSource Ds:dataSources) {
-			String dataStreamId=Ds.getDataStreamId();
-			Fitness.Users.DataSources.DataPointChanges.List dataPointChangesRes=service.users().dataSources().dataPointChanges().list("me", dataStreamId);
-			ListDataPointChangesResponse ds=dataPointChangesRes.execute();
-			dataPointChanges.add(ds);
-		}
-		return dataPointChanges;
+		String dataStreamId=id;
+		Fitness.Users.DataSources.DataPointChanges.List dataPointChangesRes=service.users().dataSources().dataPointChanges().list("me", dataStreamId);
+		ListDataPointChangesResponse ds=dataPointChangesRes.execute();
+		return ds;
 
 	}
+
 	
 	@Override
 	public List<Dataset> getDataSetsByAggregate() throws Exception {
@@ -302,4 +326,9 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
                 .build();
 		return service;
 	}
+
+	
+	
+
+	
 }

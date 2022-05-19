@@ -13,6 +13,8 @@ import com.google.api.services.fitness.model.ListDataSourcesResponse;
 
 public interface GoogleFitServiceI {
 
+	
+
 	void googleSignIn(HttpServletResponse response) throws Exception;
 
 	void saveToken(String code) throws Exception;
@@ -21,18 +23,22 @@ public interface GoogleFitServiceI {
 
 	String getDataSources() throws Exception;
 
-	UserDataset getDataSets() throws Exception;
+	String getDataSets() throws Exception;
+	
+	Dataset getDataSetsByFiltering(String id) throws Exception;
 
 	List<Dataset> getDataSetsByAggregate() throws Exception;
 
 	Credential getCredential() throws IOException;
 
-	List<ListDataPointChangesResponse> getListOfDataPointChanges() throws Exception;
+	String getListOfDataPointChanges() throws Exception;
 
 	ListDataPointChangesResponse getDataPointChanges(String id) throws Exception;
 
 	String getActivityTypeList() throws Exception;
 
 	String saveAndShowActivityTypeData(String dataStreamId, String activityType) throws Exception;
+
+	ListDataPointChangesResponse getDataPointChangesByFiltering(String id) throws Exception;
 
 }
