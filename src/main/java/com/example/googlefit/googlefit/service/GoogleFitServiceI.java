@@ -3,9 +3,9 @@ package com.example.googlefit.googlefit.service;
 import java.io.IOException;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.example.googlefit.googlefit.model.UserDataset;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.services.fitness.model.Dataset;
 import com.google.api.services.fitness.model.ListDataPointChangesResponse;
@@ -13,32 +13,32 @@ import com.google.api.services.fitness.model.ListDataSourcesResponse;
 
 public interface GoogleFitServiceI {
 
-	
+	void saveToken(String code, HttpServletRequest request, HttpServletResponse response) throws Exception;
 
-	void googleSignIn(HttpServletResponse response) throws Exception;
+	ListDataSourcesResponse getDetailsDataSources(HttpServletRequest request, HttpServletResponse response) throws Exception;
 
-	void saveToken(String code) throws Exception;
+	String getDataSources(HttpServletRequest request, HttpServletResponse response) throws Exception;
 
-	ListDataSourcesResponse getDetailsDataSources() throws Exception;
+	String getDataSets(HttpServletRequest request, HttpServletResponse response) throws Exception;
 
-	String getDataSources() throws Exception;
-
-	String getDataSets() throws Exception;
-	
-	Dataset getDataSetsByFiltering(String id) throws Exception;
-
-	List<Dataset> getDataSetsByAggregate() throws Exception;
+	List<Dataset> getDataSetsByAggregate(HttpServletRequest request, HttpServletResponse response) throws Exception;
 
 	Credential getCredential() throws IOException;
 
-	String getListOfDataPointChanges() throws Exception;
+	String getListOfDataPointChanges(HttpServletRequest request, HttpServletResponse response) throws Exception;
 
-	ListDataPointChangesResponse getDataPointChanges(String id) throws Exception;
+	ListDataPointChangesResponse getDataPointChanges(HttpServletRequest request, HttpServletResponse response, String id) throws Exception;
 
-	String getActivityTypeList() throws Exception;
+	String getActivityTypeList(HttpServletRequest request, HttpServletResponse response) throws Exception;
 
-	String saveAndShowActivityTypeData(String dataStreamId, String activityType) throws Exception;
+	String saveAndShowActivityTypeData(HttpServletRequest request, HttpServletResponse response, String dataStreamId, String activityType) throws Exception;
 
-	ListDataPointChangesResponse getDataPointChangesByFiltering(String id) throws Exception;
+	void googleSignIn(HttpServletRequest request, HttpServletResponse response) throws Exception;
+
+	Dataset getDataSetsByFiltering(HttpServletRequest request, HttpServletResponse response, String id, String type)
+			throws Exception;
+
+	ListDataPointChangesResponse getDataPointChangesByFiltering(HttpServletRequest request,
+			HttpServletResponse response, String id, String type) throws Exception;
 
 }
