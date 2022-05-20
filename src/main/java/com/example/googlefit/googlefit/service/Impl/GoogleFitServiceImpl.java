@@ -12,6 +12,8 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.joda.time.DateMidnight;
@@ -67,11 +69,14 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 	@Value("${base.url}")
 	private String baseUrl;
 	
+	@Value("${session.timeout}")
+	private int sessionLife;
+	
 	private GoogleAuthorizationCodeFlow flow;
 	
 	private static final String APPLICATION_NAME = "fitNess";
-	private static final String USER_IDENTITY_KEY="userId";
 	private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
+	private static final String GFITLOGINUSEREMAIL = "gfitLoginUserEmail";
 
 	HttpTransport httpTransport = new NetHttpTransport();
 	
@@ -93,26 +98,29 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 	UserDataset userDataset=new UserDataset();
 	
 	@PostConstruct
-	public void init() throws Exception {
-		flow=new GoogleAuthorizationCodeFlow.Builder(httpTransport, JSON_FACTORY, clientId, clientSecret, SCOPES)
-				.setCredentialDataStore(new MemoryDataStoreFactory().getDataStore("tokens"))
-				.build();
+	public void init() {
+		try {
+			flow=new GoogleAuthorizationCodeFlow.Builder(httpTransport, JSON_FACTORY, clientId, clientSecret, SCOPES)
+					.setCredentialDataStore(new MemoryDataStoreFactory().getDataStore("tokens"))
+					.build();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	@Override
-	public void googleSignIn(HttpServletResponse response) throws Exception{
+	public void googleSignIn(HttpServletRequest request, HttpServletResponse response) throws Exception{
 		GoogleAuthorizationCodeRequestUrl url = flow.newAuthorizationUrl();
 		String redirectUrl=url.setRedirectUri(callbackUrl).setAccessType("offline").build();
 		response.sendRedirect(redirectUrl);
 	}
 	
 	@Override
-	public void saveToken(String code) throws Exception {
+	public void saveToken(String code, HttpServletRequest httpReq, HttpServletResponse httpRes) throws Exception {
 		GoogleTokenResponse response=flow.newTokenRequest(code).setRedirectUri(callbackUrl).execute();
-		flow.createAndStoreCredential(response, USER_IDENTITY_KEY);
-		System.out.println(response.getAccessToken());
-		HttpClient client = HttpClient.newHttpClient();
 		
+		HttpClient client = HttpClient.newHttpClient();
 		String url = "https://www.googleapis.com/oauth2/v3/userinfo?access_token=" + response.getAccessToken();
 		HttpRequest request = HttpRequest.newBuilder(URI.create(url))
 				.header("accept", "application/json")
@@ -125,175 +133,240 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 		userDataset.setEmail(userData.get("email").getAsString());
 		System.out.println(userData.get("name").getAsString());
 		System.out.println(userData.get("email").getAsString());
+		
+		flow.createAndStoreCredential(response, userDataset.getEmail());
+		System.out.println(response.getAccessToken());
+		
+		String user = httpReq.getParameter(GFITLOGINUSEREMAIL);
+		if(user == null) {
+			Cookie loginCookie = new Cookie(GFITLOGINUSEREMAIL, userDataset.getEmail());
+//			setting cookie to expiry in 20 mins
+			loginCookie.setMaxAge(sessionLife);
+			httpRes.addCookie(loginCookie);
+			httpRes.sendRedirect("/dashboard");
+		}
 	}
+	
 	
 	@Override
 	public Credential getCredential() throws IOException {
-		return flow.loadCredential(USER_IDENTITY_KEY);
+		return flow.loadCredential(userDataset.getEmail());
 	}
 	
 	@Override
-	public ListDataSourcesResponse getDetailsDataSources() throws Exception {
-		Fitness service=fitNess();
-		Fitness.Users.DataSources.List dataSources = service.users().dataSources().list("me");
-		List<DataSource> _lDs=dataSources.execute().getDataSource();
-		userDataset.set_lDataSource(_lDs);
-		IndexCoordinates indices=IndexCoordinates.of("datasources");
-		System.out.println(userDataset.toString());
-		eRestTemplate.save(userDataset,indices);
+	public ListDataSourcesResponse getDetailsDataSources(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		boolean isCookieActive = checkCookieLife(request, response);
+		if(isCookieActive) {
+			Fitness service=fitNess(request, response);
+			Fitness.Users.DataSources.List dataSources = service.users().dataSources().list("me");
+			List<DataSource> _lDs=dataSources.execute().getDataSource();
+			userDataset.set_lDataSource(_lDs);
+			IndexCoordinates indices=IndexCoordinates.of("datasources");
+			System.out.println(userDataset.toString());
+			eRestTemplate.save(userDataset,indices);
 
-		log.info("DataSource saved into Elasticsearch.");
-		ListDataSourcesResponse Ds=dataSources.execute();
-		return Ds;
-	}
-	
-	@Override
-	public String getDataSources() throws Exception {
-		Fitness service=fitNess();
-		Fitness.Users.DataSources.List dataSources = service.users().dataSources().list("me");
-		ListDataSourcesResponse Ds=dataSources.execute();
-		List<DataSource> dataSourcesList = Ds.getDataSource();
-		String response= GooglefitConstant.HTML_BEGIN;
-		for(DataSource ds:dataSourcesList) {
-			response=response+"<a  href=\"/getDataStream/"+ds.getDataStreamId()+"\">"+ds.getDataStreamName()+"</a>\r\n"
-					+ "		<br>";
+			log.info("DataSource saved into Elasticsearch.");
+			ListDataSourcesResponse Ds=dataSources.execute();
+			return Ds;
 		}
-		response=response+GooglefitConstant.HTML_END;
-
-		System.out.println(Ds);
-		return response;
+		else {
+			response.sendRedirect("/signin");
+		}
+		return null;
 	}
 	
 	@Override
-	public String getActivityTypeList() throws Exception {
-		Fitness service=fitNess();
-		List<DataSource> dataSourcesList = service.users().dataSources().list("me").execute().getDataSource();
-		String response= GooglefitConstant.HTML_BEGIN;
-		String activityName = null;
-		for(DataSource ds:dataSourcesList) {
-			if(ds.getDataStreamName().equals("top_level")) {
-				activityName = ds.getDataType().getName().substring(11,  ds.getDataType().getName().length());
-				response=response+"<a  href=\"/saveandshow/datastreamid/"+ds.getDataStreamId()+"/activitytpye/"+ activityName +"\">"+activityName+"</a>\r\n"
+	public String getDataSources(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		boolean isCookieActive = checkCookieLife(request, response);
+		if(isCookieActive) {
+			Fitness service=fitNess(request, response);
+			Fitness.Users.DataSources.List dataSources = service.users().dataSources().list("me");
+			ListDataSourcesResponse Ds=dataSources.execute();
+			List<DataSource> dataSourcesList = Ds.getDataSource();
+			String res= GooglefitConstant.HTML_BEGIN;
+			for(DataSource ds:dataSourcesList) {
+				res=res+"<a  href=\"/getDataStream/"+ds.getDataStreamId()+"\">"+ds.getDataStreamName()+"</a>\r\n"
 						+ "		<br>";
 			}
-		}
-		response=response+GooglefitConstant.HTML_END;
-		return response;
-	}
-	
-	@Override
-	public String saveAndShowActivityTypeData(String dataStreamId, String activityType) throws Exception {
-		System.out.println("\n\nDataStreamid : " + dataStreamId);
-		HttpClient client = HttpClient.newHttpClient();
-		
-		String url = baseUrl + "/getDataStream/" + dataStreamId;
-		HttpRequest request = HttpRequest.newBuilder(URI.create(url))
-				.header("accept", "application/json")
-				.build();
-		
-		HttpResponse res = client.send(request, BodyHandlers.ofString());
-		JsonObject dataStream = JsonParser.parseString(res.body().toString()).getAsJsonObject();
-		userDataset.setDataStream(dataStream);
-		IndexCoordinates indices=IndexCoordinates.of(activityType);
-		eRestTemplate.save(userDataset,indices);
-		return res.body().toString();
-	}
-	
-	@Override
-	public ListDataPointChangesResponse getDataPointChanges(String id) throws Exception {
-		Fitness service=fitNess();
-		String dataStreamId=id;
-		Fitness.Users.DataSources.DataPointChanges.List dataPointChangesRes=service.users().dataSources().dataPointChanges().list("me", dataStreamId);
-		ListDataPointChangesResponse ds=dataPointChangesRes.execute();
-		return ds;
-	}
-	
-	@Override
-	public UserDataset getDataSets() throws Exception {
-		log.info("Inside getDataSets()");
-		Fitness service=fitNess();
-		List<DataSource> dataSources =getDetailsDataSources().getDataSource();
-		List<Dataset> dataSets =new ArrayList<Dataset>();
-		String startTimeString= String.valueOf(new DateTime().withTimeAtStartOfDay().getMillis()*1000000);
-		String endTimeString=String.valueOf(DateTime.now().getMillis()*1000000);
-		String datasetId=startTimeString+"-"+endTimeString;
-		System.out.println("datasetId: "+datasetId);
-	
-		for(DataSource Ds:dataSources) {
-			String dataStreamId=Ds.getDataStreamId();
-			//Fitness.Users.DataSources.Datasets.Get dataSet=service.users().dataSources().datasets().get("me", dataStreamId, "1650479400000000000-1650482111200656000");
-			Fitness.Users.DataSources.Datasets.Get dataSet=service.users().dataSources().datasets().get("me", dataStreamId, datasetId);
-			Dataset ds=dataSet.execute();
-			dataSets.add(ds);
-		}
-		
-		log.info("Datasets extracted from GoogleFit");
-		userDataset.set_lDataSet(dataSets);
-		IndexCoordinates indices=IndexCoordinates.of("datasets");
-		System.out.println(userDataset.toString());
-		eRestTemplate.save(userDataset,indices);
+			res=res+GooglefitConstant.HTML_END;
 
-		log.info("DataSets saved into Elasticsearch.");
-		return userDataset;
+			System.out.println(Ds);
+			return res;
+		}else {
+			response.sendRedirect("/signin");
+		}
+		return null;
+		
 	}
 	
 	@Override
-	public List<ListDataPointChangesResponse> getListOfDataPointChanges() throws Exception {
-		Fitness service=fitNess();
-		List<DataSource> dataSources =getDetailsDataSources().getDataSource();
-		List<ListDataPointChangesResponse> dataPointChanges =new ArrayList<ListDataPointChangesResponse>();
-		
-		//WHAT IS THE PURPOSE OF THIS LOOP???
-		for(DataSource Ds:dataSources) {
-			String dataStreamId=Ds.getDataStreamId();
-			System.out.println(dataStreamId);
-			Fitness.Users.DataSources.DataPointChanges.List dataPointChangesRes=service.users().dataSources().dataPointChanges().list("me", dataStreamId);
-			//OutputStream outputStream=new FileOutputStream("GoogleFitDataPoint");
-			//dataPointChangesRes.executeAndDownloadTo(outputStream);
-			//dataPointChanges.add(ds);
+	public String getActivityTypeList(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		boolean isCookieActive = checkCookieLife(request, response);
+		if(isCookieActive) {
+			Fitness service=fitNess(request, response);
+			List<DataSource> dataSourcesList = service.users().dataSources().list("me").execute().getDataSource();
+			String res= GooglefitConstant.HTML_BEGIN;
+			String activityName = null;
+			for(DataSource ds:dataSourcesList) {
+				if(ds.getDataStreamName().equals("top_level")) {
+					activityName = ds.getDataType().getName().substring(11,  ds.getDataType().getName().length());
+					res=res+"<a  href=\"/saveandshow/datastreamid/"+ds.getDataStreamId()+"/activitytpye/"+ activityName +"\">"+activityName+"</a>\r\n"
+							+ "		<br>";
+				}
+			}
+			res=res+GooglefitConstant.HTML_END;
+			return res;
+		}else {
+			response.sendRedirect("/signin");
 		}
-
-		for(DataSource Ds:dataSources) {
-			String dataStreamId=Ds.getDataStreamId();
+		return null;
+		
+	}
+	
+	@Override
+	public String saveAndShowActivityTypeData(HttpServletRequest request, HttpServletResponse response,String dataStreamId, String activityType) throws Exception {
+		boolean isCookieActive = checkCookieLife(request, response);
+		if(isCookieActive) {
+			System.out.println("\n\nDataStreamid : " + dataStreamId);
+			HttpClient client = HttpClient.newHttpClient();
+			
+			String url = baseUrl + "/getDataStream/" + dataStreamId;
+			HttpRequest req = HttpRequest.newBuilder(URI.create(url))
+					.header("accept", "application/json")
+					.build();
+			
+			HttpResponse res = client.send(req, BodyHandlers.ofString());
+			JsonObject dataStream = JsonParser.parseString(res.body().toString()).getAsJsonObject();
+			userDataset.setDataStream(dataStream);
+			IndexCoordinates indices=IndexCoordinates.of(activityType + "_datastream");
+			eRestTemplate.save(userDataset,indices);
+			return res.body().toString();
+		}else {
+			response.sendRedirect("/signin");
+		}
+		return null;
+		
+	}
+	
+	@Override
+	public ListDataPointChangesResponse getDataPointChanges(HttpServletRequest request, HttpServletResponse response, String id) throws Exception {
+		boolean isCookieActive = checkCookieLife(request, response);
+		if(isCookieActive) {
+			Fitness service=fitNess(request, response);
+			String dataStreamId=id;
 			Fitness.Users.DataSources.DataPointChanges.List dataPointChangesRes=service.users().dataSources().dataPointChanges().list("me", dataStreamId);
 			ListDataPointChangesResponse ds=dataPointChangesRes.execute();
-			dataPointChanges.add(ds);
+			return ds;
+		}else {
+			response.sendRedirect("/signin");
 		}
-		return dataPointChanges;
-
+		return null;
+		
 	}
 	
 	@Override
-	public List<Dataset> getDataSetsByAggregate() throws Exception {
-		Fitness service=fitNess();
-		Fitness.Users.DataSources.List ds = service.users().dataSources().list("me");
-		List<DataSource> dataSources = ds.execute().getDataSource();
-		System.out.println("Data Sources: "+dataSources);
-		List<Dataset> dataSets =new ArrayList<Dataset>();
-		for(DataSource Ds:dataSources) {
-			String dataStreamId=Ds.getDataStreamId();
-			System.out.println("Data Stream Id:"+dataStreamId);
-			AggregateRequest aggregateRequest = new AggregateRequest();
-	        aggregateRequest.setAggregateBy(Collections.singletonList(
-	                new AggregateBy()
-	                        .setDataSourceId(dataStreamId)));
-	        aggregateRequest.setStartTimeMillis(DateMidnight.now().getMillis());
-	        aggregateRequest.setEndTimeMillis(DateTime.now().getMillis());
-	        Fitness.Users.Dataset.Aggregate aggregaterequest = service.users().dataset().aggregate("me", aggregateRequest);
-	        AggregateResponse response = aggregaterequest.execute();
-	        List<AggregateBucket> aggregateData = response.getBucket();
-	     	for(AggregateBucket bucket:aggregateData) {
-		    	 List<Dataset> dataset = bucket.getDataset();
-		    	 dataSets.addAll(dataset);
-		    }
+	public UserDataset getDataSets(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		boolean isCookieActive = checkCookieLife(request, response);
+		if(isCookieActive) {
+			log.info("Inside getDataSets()");
+			Fitness service=fitNess(request, response);
+			List<DataSource> dataSources =getDetailsDataSources(request, response).getDataSource();
+			List<Dataset> dataSets =new ArrayList<Dataset>();
+			String startTimeString= String.valueOf(new DateTime().withTimeAtStartOfDay().getMillis()*1000000);
+			String endTimeString=String.valueOf(DateTime.now().getMillis()*1000000);
+			String datasetId=startTimeString+"-"+endTimeString;
+			System.out.println("datasetId: "+datasetId);
+		
+			for(DataSource Ds:dataSources) {
+				String dataStreamId=Ds.getDataStreamId();
+				//Fitness.Users.DataSources.Datasets.Get dataSet=service.users().dataSources().datasets().get("me", dataStreamId, "1650479400000000000-1650482111200656000");
+				Fitness.Users.DataSources.Datasets.Get dataSet=service.users().dataSources().datasets().get("me", dataStreamId, datasetId);
+				Dataset ds=dataSet.execute();
+				dataSets.add(ds);
+			}
+			
+			log.info("Datasets extracted from GoogleFit");
+			userDataset.set_lDataSet(dataSets);
+			IndexCoordinates indices=IndexCoordinates.of("datasets");
+			System.out.println(userDataset.toString());
+			eRestTemplate.save(userDataset,indices);
+
+			log.info("DataSets saved into Elasticsearch.");
+			return userDataset;
+		}else {
+			response.sendRedirect("/signin");
 		}
-		System.out.println("Datasets: "+dataSets);
-		return dataSets;
+		return null;
+	}
+	
+	@Override
+	public List<ListDataPointChangesResponse> getListOfDataPointChanges(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		boolean isCookieActive = checkCookieLife(request, response);
+		if(isCookieActive) {
+			Fitness service=fitNess(request, response);
+			List<DataSource> dataSources =getDetailsDataSources(request, response).getDataSource();
+			List<ListDataPointChangesResponse> dataPointChanges =new ArrayList<ListDataPointChangesResponse>();
+			
+			for(DataSource Ds:dataSources) {
+				String dataStreamId=Ds.getDataStreamId();
+				Fitness.Users.DataSources.DataPointChanges.List dataPointChangesRes=service.users().dataSources().dataPointChanges().list("me", dataStreamId);
+				ListDataPointChangesResponse ds=dataPointChangesRes.execute();
+				dataPointChanges.add(ds);
+			}
+			return dataPointChanges;
+		}else {
+			response.sendRedirect("/signin");
+		}
+		return null;
+		
+	}
+	
+	@Override
+	public List<Dataset> getDataSetsByAggregate(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		boolean isCookieActive = checkCookieLife(request, response);
+		if(isCookieActive) {
+			Fitness service=fitNess(request, response);
+			Fitness.Users.DataSources.List ds = service.users().dataSources().list("me");
+			List<DataSource> dataSources = ds.execute().getDataSource();
+			System.out.println("Data Sources: "+dataSources);
+			List<Dataset> dataSets =new ArrayList<Dataset>();
+			for(DataSource Ds:dataSources) {
+				String dataStreamId=Ds.getDataStreamId();
+				System.out.println("Data Stream Id:"+dataStreamId);
+				AggregateRequest aggregateRequest = new AggregateRequest();
+		        aggregateRequest.setAggregateBy(Collections.singletonList(
+		                new AggregateBy()
+		                        .setDataSourceId(dataStreamId)));
+		        aggregateRequest.setStartTimeMillis(DateMidnight.now().getMillis());
+		        aggregateRequest.setEndTimeMillis(DateTime.now().getMillis());
+		        Fitness.Users.Dataset.Aggregate aggregaterequest = service.users().dataset().aggregate("me", aggregateRequest);
+		        AggregateResponse res = aggregaterequest.execute();
+		        List<AggregateBucket> aggregateData = res.getBucket();
+		     	for(AggregateBucket bucket:aggregateData) {
+			    	 List<Dataset> dataset = bucket.getDataset();
+			    	 dataSets.addAll(dataset);
+			    }
+			}
+			System.out.println("Datasets: "+dataSets);
+			return dataSets;
+		}else {
+			response.sendRedirect("/signin");
+		}
+		return null;
+		
     }
 	
-	private Fitness fitNess() throws Exception {
-		Credential credential=flow.loadCredential(USER_IDENTITY_KEY);
-		System.out.println("Credential for accessToken: "+credential);
+	private Fitness fitNess(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		Cookie[] cookies = request.getCookies();
+		Cookie loginCookie = null;
+		for(Cookie cookie : cookies){
+    		if(cookie.getName().equals(GFITLOGINUSEREMAIL)){
+    			loginCookie = cookie;
+    			break;
+    		}
+    	}
+		Credential credential=flow.loadCredential(loginCookie.getValue());
+		System.out.println("AccessToken: "+credential.getAccessToken());
 		Fitness service = new Fitness.Builder(
                 httpTransport,
                 JSON_FACTORY,
@@ -302,4 +375,25 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
                 .build();
 		return service;
 	}
+	
+	private boolean checkCookieLife(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		Cookie[] cookies = request.getCookies();
+		Cookie loginCookie = null;
+		if(cookies != null) {
+			for(Cookie cookie : cookies){
+	    		if(cookie.getName().equals(GFITLOGINUSEREMAIL)){
+	    			loginCookie = cookie;
+	    			break;
+	    		}
+	    	}
+			if(loginCookie != null) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		return false;
+	}
+	
 }
