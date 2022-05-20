@@ -45,60 +45,69 @@ public class GooglefitControler {
 	}
 
 	@GetMapping(value={"/signin"})
-	public void googleSignIn(HttpServletResponse response) throws Exception {
-		googleFitSvc.googleSignIn(response);
+	public void googleSignIn(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		googleFitSvc.googleSignIn(request, response);
 	}
 	
 	@GetMapping(value= {"/steps"})
-	public ModelAndView saveAuthorizationCode(HttpServletRequest request) throws Exception {
+	public ModelAndView saveAuthorizationCode(HttpServletRequest request, HttpServletResponse response) throws Exception {
 		String code=request.getParameter("code");
 		if(code!=null) {
-			googleFitSvc.saveToken(code);
+			googleFitSvc.saveToken(code, request, response);
 		}
 		ModelAndView modelAndView = new ModelAndView();
 	    modelAndView.setViewName("dashboard");
 	    return modelAndView;
 	}
 	
+	@GetMapping(value= {"/dashboard"})
+	public ModelAndView dashboard(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		ModelAndView modelAndView = new ModelAndView();
+	    modelAndView.setViewName("dashboard");
+	    return modelAndView;
+	}
+	
 	@GetMapping(value= {"/rawdatasources"})
-	public ListDataSourcesResponse getDetailsDataSources() throws Exception {
-		return googleFitSvc.getDetailsDataSources();
+	public ListDataSourcesResponse getDetailsDataSources(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		return googleFitSvc.getDetailsDataSources(request, response);
 
 	}
 
 	@GetMapping(value= {"/datasources"})
-	public String getDataSources() throws Exception {
-		return googleFitSvc.getDataSources();
+	public String getDataSources(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		return googleFitSvc.getDataSources(request, response);
 	}
 	
 	@GetMapping(value= {"/activitytype"})
-	public String getActivityTypeList() throws Exception {
-		return googleFitSvc.getActivityTypeList();
+	public String getActivityTypeList(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		return googleFitSvc.getActivityTypeList(request, response);
 	}
 	
 	@GetMapping(value= {"/saveandshow/datastreamid/{id}/activitytpye/{type}"})
-	public String saveAndShowActivityType(@PathVariable String id, @PathVariable String type) throws Exception {
-		return googleFitSvc.saveAndShowActivityTypeData(id, type);
+	public String saveAndShowActivityType(HttpServletRequest request, HttpServletResponse response, 
+			@PathVariable String id, @PathVariable String type) throws Exception {
+		return googleFitSvc.saveAndShowActivityTypeData(request, response, id, type);
 	}
 
 	@GetMapping(value={"/getDataStream/{id}"})
-	public ListDataPointChangesResponse getDataPoints(@PathVariable String id) throws Exception {
-		return googleFitSvc.getDataPointChanges(id);
+	public ListDataPointChangesResponse getDataPoints(HttpServletRequest request, HttpServletResponse response,
+			@PathVariable String id) throws Exception {
+		return googleFitSvc.getDataPointChanges(request, response, id);
 	}
 
 	@GetMapping(value={"/datasets"})
-	public UserDataset getDataSets() throws Exception {
-		return googleFitSvc.getDataSets();
+	public UserDataset getDataSets(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		return googleFitSvc.getDataSets(request, response);
 	}
 
 	@GetMapping(value={"/datapointchanges"})
-	public List<ListDataPointChangesResponse> getDataPoints() throws Exception {
-		return googleFitSvc.getListOfDataPointChanges();
+	public List<ListDataPointChangesResponse> getDataPoints(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		return googleFitSvc.getListOfDataPointChanges(request, response);
 	}
 	
 	@GetMapping(value= {"/datasetsbyaggregate"})
-	public List<Dataset> getDataSetsByAggregate() throws Exception {
-		return googleFitSvc.getDataSetsByAggregate();
+	public List<Dataset> getDataSetsByAggregate(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		return googleFitSvc.getDataSetsByAggregate(request, response);
 	}
 	
 }
