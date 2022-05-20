@@ -123,6 +123,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 	
 	@Override
 	public void saveToken(String code, HttpServletRequest httpReq, HttpServletResponse httpRes) throws Exception {
+		log.info("Inside saveToken");
 		GoogleTokenResponse response=flow.newTokenRequest(code).setRedirectUri(callbackUrl).execute();
 		
 		HttpClient client = HttpClient.newHttpClient();
@@ -155,27 +156,29 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 	
 	@Override
 	public Credential getCredential() throws IOException {
+		log.info("Inside getCredential");
 		return flow.loadCredential(userDetails.getEmail());
 	}
 	
 	@Override
 	public ListDataSourcesResponse getDetailsDataSources(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		log.info("Inside getDetailsDataSources");
 		boolean isCookieActive = checkCookieLife(request, response);
 		if(isCookieActive) {
 			Fitness service=fitNess(request, response);
-		Fitness.Users.DataSources.List dataSources = service.users().dataSources().list("me");
-		List<DataSource> _lDs=dataSources.execute().getDataSource();
-		
-		/* ElasticDB upload */
-		UserDataSourceList dataSourceList = new UserDataSourceList();
-		dataSourceList.set_lDataSource(_lDs);
-		IndexCoordinates indices=IndexCoordinates.of("datasources");
-		System.out.println(dataSourceList.toString());
-		eRestTemplate.save(dataSourceList,indices);
-		log.info("DataSource saved into Elasticsearch.");
-		ListDataSourcesResponse Ds=dataSources.execute();
-		return Ds;
-	}
+			Fitness.Users.DataSources.List dataSources = service.users().dataSources().list("me");
+			List<DataSource> _lDs=dataSources.execute().getDataSource();
+			
+			/* ElasticDB upload */
+			UserDataSourceList dataSourceList = new UserDataSourceList();
+			dataSourceList.set_lDataSource(_lDs);
+			IndexCoordinates indices=IndexCoordinates.of("datasources");
+			System.out.println(dataSourceList.toString());
+			eRestTemplate.save(dataSourceList,indices);
+			log.info("DataSource saved into Elasticsearch.");
+			ListDataSourcesResponse Ds=dataSources.execute();
+			return Ds;
+		}
 		else {
 			response.sendRedirect("/signin");
 		}
@@ -184,6 +187,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 	
 	@Override
 	public String getDataSources(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		log.info("Inside getDataSources");
 		boolean isCookieActive = checkCookieLife(request, response);
 		if(isCookieActive) {
 			Fitness service=fitNess(request, response);
@@ -208,6 +212,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 	
 	@Override
 	public String getActivityTypeList(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		log.info("Inside getActivityTypeList");
 		boolean isCookieActive = checkCookieLife(request, response);
 		if(isCookieActive) {
 			Fitness service=fitNess(request, response);
@@ -232,6 +237,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 	
 	@Override
 	public String saveAndShowActivityTypeData(HttpServletRequest request, HttpServletResponse response,String dataStreamId, String activityType) throws Exception {
+		log.info("Inside saveAndShowActivityTypeData");
 		boolean isCookieActive = checkCookieLife(request, response);
 		if(isCookieActive) {
 			System.out.println("\n\nDataStreamid : " + dataStreamId);
@@ -261,6 +267,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 	
 	@Override
 	public ListDataPointChangesResponse getDataPointChanges(HttpServletRequest request, HttpServletResponse response, String id) throws Exception {
+		log.info("Inside getDataPointChanges");
 		boolean isCookieActive = checkCookieLife(request, response);
 		if(isCookieActive) {
 			Fitness service=fitNess(request, response);
@@ -277,9 +284,10 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 	
 	@Override
 	public String getDataSets(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		log.info("Inside getDataSets");
 		boolean isCookieActive = checkCookieLife(request, response);
 		if(isCookieActive) {
-//			log.info("Inside getDataSets()");
+			log.info("Inside getDataSets()");
 			Fitness service=fitNess(request, response);
 			List<DataSource> dataSources =getDetailsDataSources(request, response).getDataSource();
 					String res = GooglefitConstant.HTML_BEGIN;
@@ -305,6 +313,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 	
 	@Override
 	public Dataset getDataSetsByFiltering(HttpServletRequest request, HttpServletResponse response, String id, String type) throws Exception {
+		log.info("Inside getDataSetsByFiltering");
 		boolean isCookieActive = checkCookieLife(request, response);
 		if(isCookieActive) {
 			Fitness service=fitNess(request, response);
@@ -333,6 +342,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 	
 	@Override
 	public String getListOfDataPointChanges(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		log.info("Inside getListOfDataPointChanges");
 		boolean isCookieActive = checkCookieLife(request, response);
 		if(isCookieActive) {
 			Fitness service=fitNess(request, response);
@@ -361,6 +371,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 	
 	@Override
 	public ListDataPointChangesResponse getDataPointChangesByFiltering(HttpServletRequest request, HttpServletResponse response, String id, String type) throws Exception {
+		log.info("Inside getDataPointChangesByFiltering");
 		boolean isCookieActive = checkCookieLife(request, response);
 		if(isCookieActive) {
 			Fitness service=fitNess(request, response);
@@ -388,6 +399,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 	
 	@Override
 	public List<Dataset> getDataSetsByAggregate(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		log.info("Inside getDataSetsByAggregate");
 		boolean isCookieActive = checkCookieLife(request, response);
 		if(isCookieActive) {
 			Fitness service=fitNess(request, response);
@@ -422,6 +434,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
     }
 	
 	private Fitness fitNess(HttpServletRequest request, HttpServletResponse response) throws Exception {
+		log.info("Inside fitNess");
 		Cookie[] cookies = request.getCookies();
 		Cookie loginCookie = null;
 		for(Cookie cookie : cookies){
@@ -442,6 +455,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 	}
 
 	private boolean checkCookieLife(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		log.info("Inside checkCookieLife");
 		Cookie[] cookies = request.getCookies();
 		Cookie loginCookie = null;
 		if(cookies != null) {
