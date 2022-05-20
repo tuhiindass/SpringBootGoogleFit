@@ -51,7 +51,6 @@ import com.google.api.services.fitness.model.ListDataPointChangesResponse;
 import com.google.api.services.fitness.model.ListDataSourcesResponse;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sun.tools.sjavac.Log;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -256,7 +255,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 			userDataStream.setDataStream(dataStream);
 			IndexCoordinates indices=IndexCoordinates.of(activityType + "_datastream");
 			eRestTemplate.save(userDataStream,indices);
-			Log.info("Saved DataStream in db");
+			log.info("Saved DataStream in db");
 			return res.body().toString();
 		}else {
 			response.sendRedirect("/signin");
