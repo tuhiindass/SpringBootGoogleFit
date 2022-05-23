@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import com.example.googlefit.googlefit.GooglefitConstant;
 import com.example.googlefit.googlefit.model.UserDataset;
 import com.example.googlefit.googlefit.service.GoogleFitServiceI;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeRequestUrl;
@@ -39,6 +40,7 @@ import com.google.api.services.fitness.model.AggregateBucket;
 import com.google.api.services.fitness.model.AggregateBy;
 import com.google.api.services.fitness.model.AggregateRequest;
 import com.google.api.services.fitness.model.AggregateResponse;
+import com.google.api.services.fitness.model.DataPoint;
 import com.google.api.services.fitness.model.DataSource;
 import com.google.api.services.fitness.model.Dataset;
 import com.google.api.services.fitness.model.ListDataPointChangesResponse;
@@ -205,6 +207,24 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 		String dataStreamId=id;
 		Fitness.Users.DataSources.DataPointChanges.List dataPointChangesRes=service.users().dataSources().dataPointChanges().list("me", dataStreamId);
 		ListDataPointChangesResponse ds=dataPointChangesRes.execute();
+		List<DataPoint> deletedDataPoint = ds.getDeletedDataPoint();
+		for(DataPoint dp:deletedDataPoint) {
+			Long nonosTime=dp.getEndTimeNanos();
+			Long milliTime=nonosTime/1000000;
+			dp.setEndTimeNanos(milliTime);
+			dp.setStartTimeNanos(milliTime);
+		}
+		List<DataPoint> insertedDatapoint = ds.getInsertedDataPoint();
+		for(DataPoint dp:insertedDatapoint) {
+	//	DataPoint ins = dp.getEndTimeNanos();
+		
+		Long time = dp.getEndTimeNanos();
+		
+		long militime = time/1000000;
+		dp.setEndTimeNanos(militime);
+		dp.setStartTimeNanos(militime);
+		System.out.println("time:"+militime);
+		}
 		return ds;
 	}
 	
@@ -244,11 +264,19 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 		// TODO Auto-generated method stub
 		Fitness service=fitNess();
 		String startTimeString= String.valueOf(new DateTime().withTimeAtStartOfDay().getMillis()*1000000);
+		//String startTimeString= String.valueOf(new DateTime().withTimeAtStartOfDay().getMillis());
 		String endTimeString=String.valueOf(DateTime.now().getMillis()*1000000);
+		//String endTimeString=String.valueOf(DateTime.now().getMillis());
 		String datasetId=startTimeString+"-"+endTimeString;
 		System.out.println("datasetId: "+datasetId);
 		Fitness.Users.DataSources.Datasets.Get dataSet=service.users().dataSources().datasets().get("me", id, datasetId);
 		Dataset ds=dataSet.execute();
+		Long maxEndTimeNs=ds.getMaxEndTimeNs();
+		Long maxEndTimeMili=maxEndTimeNs/1000000;
+		System.out.println("maxEndTime:"+maxEndTimeMili);
+		ds.setMaxEndTimeNs(maxEndTimeMili);
+		Long minStartTimeMili=ds.getMinStartTimeNs()/1000000;
+		ds.setMinStartTimeNs(minStartTimeMili);
 		return ds;
 	}
 	
@@ -282,6 +310,25 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 		String dataStreamId=id;
 		Fitness.Users.DataSources.DataPointChanges.List dataPointChangesRes=service.users().dataSources().dataPointChanges().list("me", dataStreamId);
 		ListDataPointChangesResponse ds=dataPointChangesRes.execute();
+		List<DataPoint> deletedDataPoint = ds.getDeletedDataPoint();
+		for(DataPoint dp:deletedDataPoint) {
+			Long nonosTime=dp.getEndTimeNanos();
+			Long milliTime=nonosTime/1000000;
+			dp.setEndTimeNanos(milliTime);
+			dp.setStartTimeNanos(milliTime);
+		}
+		List<DataPoint> insertedDatapoint = ds.getInsertedDataPoint();
+		for(DataPoint dp:insertedDatapoint) {
+	//	DataPoint ins = dp.getEndTimeNanos();
+		
+		Long time = dp.getEndTimeNanos();
+		
+		long militime = time/1000000;
+		dp.setEndTimeNanos(militime);
+		dp.setStartTimeNanos(militime);
+		System.out.println("time:"+militime);
+		}
+	//	ins.s
 		return ds;
 
 	}
