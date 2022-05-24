@@ -70,8 +70,8 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
     @Value("${clientSecret}")
     private String clientSecret;
 
-    @Value("${base.url}")
-    private String baseUrl;
+//    @Value("${base.url}")
+//    private String baseUrl;
 
     @Value("${session.timeout}")
     private int sessionLife;
