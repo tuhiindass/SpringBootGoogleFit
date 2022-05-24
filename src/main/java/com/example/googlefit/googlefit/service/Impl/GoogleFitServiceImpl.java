@@ -266,10 +266,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 //			eRestTemplate.save(userDataStream,indices);
 			//Log.info("Saved DataStream in db");
 			return res.body().toString();
-//			Fitness service=fitNess(request, response);
-//			Fitness.Users.DataSources.DataPointChanges.List dataPointChangesRes=service.users().dataSources().dataPointChanges().list("me", dataStreamId);
-//			ListDataPointChangesResponse ds=dataPointChangesRes.execute();
-//			return ds;
+
 		}else {
 			response.sendRedirect("/signin");
 		}
@@ -288,7 +285,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 		
 			Fitness.Users.DataSources.DataPointChanges.List dataPointChangesRes=service.users().dataSources().dataPointChanges().list("me", dataStreamId);
 			
-			//ListDataPointChangesResponse ds=dataPointChangesRes.execute();
+			
 			
 			
 				ListDataPointChangesResponse ds=dataPointChangesRes.execute();
@@ -308,7 +305,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 				}
 				List<DataPoint> insertedDatapoint = ds.getInsertedDataPoint();
 				for(DataPoint dp:insertedDatapoint) {
-			//	DataPoint ins = dp.getEndTimeNanos();
+			
 				
 					Long starttime = dp.getEndTimeNanos();
 					Long endTime = dp.getStartTimeNanos();
