@@ -31,7 +31,7 @@ public interface GoogleFitServiceI {
 
 	String getActivityTypeList(HttpServletRequest request, HttpServletResponse response) throws Exception;
 
-	String saveAndShowActivityTypeData(HttpServletRequest request, HttpServletResponse response, String dataStreamId, String activityType) throws Exception;
+	ListDataPointChangesResponse saveAndShowActivityTypeData(HttpServletRequest request, HttpServletResponse response, String dataStreamId, String activityType) throws Exception;
 
 	void googleSignIn(HttpServletRequest request, HttpServletResponse response) throws Exception;
 

@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
-import com.example.googlefit.googlefit.model.UserDataset;
 import com.example.googlefit.googlefit.service.GoogleFitServiceI;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.services.fitness.model.Dataset;
@@ -84,8 +83,8 @@ public class GooglefitControler {
 	}
 	
 	@GetMapping(value= {"/saveandshow/datastreamid/{id}/activitytpye/{type}"})
-	public String saveAndShowActivityType(HttpServletRequest request, HttpServletResponse response, 
-			@PathVariable String id, @PathVariable String type) throws Exception {
+	public ListDataPointChangesResponse saveAndShowActivityType(HttpServletRequest request, HttpServletResponse response,
+																@PathVariable String id, @PathVariable String type) throws Exception {
 		return googleFitSvc.saveAndShowActivityTypeData(request, response, id, type);
 	}
 
