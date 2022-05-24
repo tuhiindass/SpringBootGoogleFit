@@ -6,9 +6,11 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import javax.annotation.PostConstruct;
@@ -23,6 +25,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.ModelAndView;
 
 import com.example.googlefit.googlefit.GooglefitConstant;
 import com.example.googlefit.googlefit.model.UserDataSourceList;
@@ -86,6 +90,8 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 	private static final String GFITLOGINUSEREMAIL = "gfitLoginUserEmail";
 
 	HttpTransport httpTransport = new NetHttpTransport();
+	
+	private static long convertToMillis=1000000;
 	
 	private static final List<String> SCOPES = Arrays.asList(
 			"https://www.googleapis.com/auth/fitness.activity.read",
@@ -260,6 +266,10 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 //			eRestTemplate.save(userDataStream,indices);
 			//Log.info("Saved DataStream in db");
 			return res.body().toString();
+//			Fitness service=fitNess(request, response);
+//			Fitness.Users.DataSources.DataPointChanges.List dataPointChangesRes=service.users().dataSources().dataPointChanges().list("me", dataStreamId);
+//			ListDataPointChangesResponse ds=dataPointChangesRes.execute();
+//			return ds;
 		}else {
 			response.sendRedirect("/signin");
 		}
@@ -288,21 +298,25 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 				List<DataPoint> deletedDataPoint = ds.getDeletedDataPoint();
 				for(DataPoint dp:deletedDataPoint) {
 				
-					Long nanosTime=dp.getEndTimeNanos();
-					Long milliTime=nanosTime/1000000;
-					dp.setEndTimeNanos(milliTime);
-					dp.setStartTimeNanos(milliTime);
+					Long starttime = dp.getEndTimeNanos();
+					Long endTime = dp.getStartTimeNanos();
+					long startMilliTime = starttime/convertToMillis;
+					long endMilliTime = endTime/convertToMillis;
+					dp.setEndTimeNanos(endMilliTime);
+					dp.setStartTimeNanos(startMilliTime);
+					System.out.println("time:"+endMilliTime);
 				}
 				List<DataPoint> insertedDatapoint = ds.getInsertedDataPoint();
 				for(DataPoint dp:insertedDatapoint) {
 			//	DataPoint ins = dp.getEndTimeNanos();
 				
-				Long time = dp.getEndTimeNanos();
-				
-				long millitime = time/1000000;
-				dp.setEndTimeNanos(millitime);
-				dp.setStartTimeNanos(millitime);
-				System.out.println("time:"+millitime);
+					Long starttime = dp.getEndTimeNanos();
+					Long endTime = dp.getStartTimeNanos();
+					long startMilliTime = starttime/convertToMillis;
+					long endMilliTime = endTime/convertToMillis;
+					dp.setEndTimeNanos(endMilliTime);
+					dp.setStartTimeNanos(startMilliTime);
+					System.out.println("time:"+endMilliTime);
 				}
 			
 			return ds;
@@ -316,12 +330,37 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 	}
 	
 	@Override
-	public String getDataSets(HttpServletRequest request, HttpServletResponse response) throws Exception {
+	public String getDataSets(HttpServletRequest request, HttpServletResponse response, String startDateTime, String endDateTime) throws Exception {
 		//log.info("Inside getDataSets");
 		boolean isCookieActive = checkCookieLife(request, response);
+		System.out.println("startDateTime "+startDateTime);
+		System.out.println("endDateTime  "+endDateTime);
+		
+		
+		//System.out.println("Time in millis  "+timeInMillis);
+		String endTimeString=null;
+		String startTimeString=null;
 		if(isCookieActive) {
 		//	log.info("Inside getDataSets()");
-			Fitness service=fitNess(request, response);
+			if(startDateTime == null && endDateTime == null) {
+				 startTimeString= String.valueOf(new DateTime().withTimeAtStartOfDay().getMillis()*convertToMillis);
+				 endTimeString=String.valueOf(DateTime.now().getMillis()*convertToMillis);
+			}
+			else {
+				//SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+				Date startdate = sdf.parse(startDateTime .replace("T", " "));
+				Date enddate=sdf.parse(endDateTime .replace("T", " "));
+				long startTimeNanos = startdate.getTime()*convertToMillis;
+				long endTimeNanos=enddate.getTime()*convertToMillis;
+				System.out.println("StarTime in millis "+startTimeNanos);
+				
+				System.out.println("EndTime in millis  "+endTimeNanos);
+				startTimeString=String.valueOf(startTimeNanos);
+				endTimeString=String.valueOf(endTimeNanos);
+				
+			}
+			
 			List<DataSource> dataSources =getDetailsDataSources(request, response).getDataSource();
 					String res = GooglefitConstant.HTML_BEGIN;
 			String activityDataType = null;
@@ -330,13 +369,14 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 					System.out.println("DataStreamName:"+Ds.getDataStreamName());
 					activityDataType=Ds.getDataType().getName().substring(11,  Ds.getDataType().getName().length());
 					System.out.println("DataType:"+activityDataType);
-					res=res+"<a  href=\"/getDataSets/datastreamid/"+Ds.getDataStreamId()+"/activityType/"+ activityDataType +"\">"+activityDataType+"</a>\r\n"
+					res=res+"<a  href=\"/getDataSets/datastreamid/"+Ds.getDataStreamId()+"/activityType/"+ activityDataType +"/startDateTime/"+startTimeString+"/endDateTime/"+endTimeString+"\">"+activityDataType+"</a>\r\n"
 							+ "		<br>";
 				}
 				
 			}
 			res = res+GooglefitConstant.HTML_END;
 			return res;
+			
 		}else {
 			response.sendRedirect("/signin");
 		}
@@ -345,13 +385,14 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 	}
 	
 
-	public Dataset getDataSetsByFiltering(HttpServletRequest request, HttpServletResponse response, String id, String type) throws Exception {
+	public Dataset getDataSetsByFiltering(HttpServletRequest request, HttpServletResponse response, String id, String type, String startDateTime, String endDateTime) throws Exception {
 		//log.info("Inside getDataSetsByFiltering");
 		boolean isCookieActive = checkCookieLife(request, response);
 		if(isCookieActive) {
 			Fitness service=fitNess(request, response);
-			String startTimeString= String.valueOf(new DateTime().withTimeAtStartOfDay().getMillis()*1000000);
-			String endTimeString=String.valueOf(DateTime.now().getMillis()*1000000);
+			String startTimeString=startDateTime;
+			String endTimeString=endDateTime;
+			
 			String datasetId=startTimeString+"-"+endTimeString;
 			System.out.println("datasetId: "+datasetId);
 			Fitness.Users.DataSources.Datasets.Get dataSet=service.users().dataSources().datasets().get("me", id, datasetId);
@@ -364,11 +405,20 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 //			eRestTemplate.save(userDataset,indices);
 			//log.info("DataSets saved into Elasticsearch.");
 			Long maxEndTimeNs=ds.getMaxEndTimeNs();
-			Long maxEndTimeMilli=maxEndTimeNs/1000000;
+			Long maxEndTimeMilli=maxEndTimeNs/convertToMillis;
 			System.out.println("maxEndTime:"+maxEndTimeMilli);
 			ds.setMaxEndTimeNs(maxEndTimeMilli);
-			Long minStartTimeMili=ds.getMinStartTimeNs()/1000000;
+			Long minStartTimeMili=ds.getMinStartTimeNs()/convertToMillis;
 			ds.setMinStartTimeNs(minStartTimeMili);
+			List<DataPoint> dataPoint = ds.getPoint();
+			for(DataPoint dp :dataPoint) {
+				Long endTimenanos = dp.getEndTimeNanos();
+				Long startTimenanos = dp.getStartTimeNanos();
+				long startTimeMillis = startTimenanos/convertToMillis;
+				long endTimeMillis = endTimenanos/convertToMillis;
+				dp.setStartTimeNanos(startTimeMillis);
+				dp.setEndTimeNanos(endTimeMillis);
+			}
 			return ds;
 		}else {
 			response.sendRedirect("/signin");
@@ -385,7 +435,6 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 	//	log.info("Inside getListOfDataPointChanges");
 		boolean isCookieActive = checkCookieLife(request, response);
 		if(isCookieActive) {
-			Fitness service=fitNess(request, response);
 			List<DataSource> dataSources =getDetailsDataSources(request, response).getDataSource();
 			String res= GooglefitConstant.HTML_BEGIN;
 			String activityDataType = null;
@@ -430,23 +479,30 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 
 
 			//log.info("DataSets saved into Elasticsearch.");
+			
 			List<DataPoint> deletedDataPoint = ds.getDeletedDataPoint();
 			for(DataPoint dp:deletedDataPoint) {
-				Long nonosTime=dp.getEndTimeNanos();
-				Long milliTime=nonosTime/1000000;
-				dp.setEndTimeNanos(milliTime);
-				dp.setStartTimeNanos(milliTime);
+				//Long nonosTime=dp.getEndTimeNanos();
+				Long starttime = dp.getEndTimeNanos();
+				Long endTime = dp.getStartTimeNanos();
+				long startMilliTime = starttime/convertToMillis;
+				long endMilliTime = endTime/convertToMillis;
+				dp.setEndTimeNanos(endMilliTime);
+				dp.setStartTimeNanos(startMilliTime);
+				System.out.println("time:"+endMilliTime);
 			}
 			List<DataPoint> insertedDatapoint = ds.getInsertedDataPoint();
 			for(DataPoint dp:insertedDatapoint) {
 		//	DataPoint ins = dp.getEndTimeNanos();
 			
-			Long time = dp.getEndTimeNanos();
+			Long starttime = dp.getEndTimeNanos();
+			Long endTime = dp.getStartTimeNanos();
 			
-			long millitime = time/1000000;
-			dp.setEndTimeNanos(millitime);
-			dp.setStartTimeNanos(millitime);
-			System.out.println("time:"+millitime);
+			long startMilliTime = starttime/convertToMillis;
+			long endMilliTime = endTime/convertToMillis;
+			dp.setEndTimeNanos(endMilliTime);
+			dp.setStartTimeNanos(startMilliTime);
+			System.out.println("time:"+endMilliTime);
 			}
 			return ds;
 		}else {
@@ -534,5 +590,9 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 		}
 		return false;
 	}
+
+	
+	
+	
 	
 }

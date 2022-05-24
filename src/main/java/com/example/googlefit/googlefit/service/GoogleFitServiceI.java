@@ -6,6 +6,8 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.web.servlet.ModelAndView;
+
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.services.fitness.model.Dataset;
 import com.google.api.services.fitness.model.ListDataPointChangesResponse;
@@ -19,7 +21,8 @@ public interface GoogleFitServiceI {
 
 	String getDataSources(HttpServletRequest request, HttpServletResponse response) throws Exception;
 
-	String getDataSets(HttpServletRequest request, HttpServletResponse response) throws Exception;
+	String getDataSets(HttpServletRequest request, HttpServletResponse response, String userEmail, String pass)
+			throws Exception;
 
 	List<Dataset> getDataSetsByAggregate(HttpServletRequest request, HttpServletResponse response) throws Exception;
 
@@ -35,10 +38,14 @@ public interface GoogleFitServiceI {
 
 	void googleSignIn(HttpServletRequest request, HttpServletResponse response) throws Exception;
 
-	Dataset getDataSetsByFiltering(HttpServletRequest request, HttpServletResponse response, String id, String type)
+	Dataset getDataSetsByFiltering(HttpServletRequest request, HttpServletResponse response, String id, String type,String startDateTime, String endDateTime)
 			throws Exception;
 
 	ListDataPointChangesResponse getDataPointChangesByFiltering(HttpServletRequest request,
 			HttpServletResponse response, String id, String type) throws Exception;
+
+	
+
+	
 
 }
