@@ -122,7 +122,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
 
     @Override
     public void saveToken(String code, HttpServletRequest httpReq, HttpServletResponse httpRes) throws Exception {
-        log.info("Inside saveToken");
+      //  log.info("Inside saveToken");
         GoogleTokenResponse response = flow.newTokenRequest(code).setRedirectUri(callbackUrl).execute();
 
         HttpClient client = HttpClient.newHttpClient();
@@ -155,13 +155,13 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
 
     @Override
     public Credential getCredential() throws IOException {
-        log.info("Inside getCredential");
+        //log.info("Inside getCredential");
         return flow.loadCredential(userDetails.getEmail());
     }
 
     @Override
     public ListDataSourcesResponse getDetailsDataSources(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        log.info("Inside getDetailsDataSources");
+        //log.info("Inside getDetailsDataSources");
         boolean isCookieActive = checkCookieLife(request, response);
         if (isCookieActive) {
             Fitness service = fitNess(request, response);
@@ -174,7 +174,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
             IndexCoordinates indices = IndexCoordinates.of("datasources");
             System.out.println(dataSourceList.toString());
             eRestTemplate.save(dataSourceList, indices);
-            log.info("DataSource saved into Elasticsearch.");
+          //  log.info("DataSource saved into Elasticsearch.");
             ListDataSourcesResponse Ds = dataSources.execute();
             return Ds;
         } else {
@@ -185,7 +185,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
 
     @Override
     public String getDataSources(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        log.info("Inside getDataSources");
+        //log.info("Inside getDataSources");
         boolean isCookieActive = checkCookieLife(request, response);
         if (isCookieActive) {
             Fitness service = fitNess(request, response);
@@ -210,7 +210,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
 
     @Override
     public String getActivityTypeList(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        log.info("Inside getActivityTypeList");
+        //log.info("Inside getActivityTypeList");
         boolean isCookieActive = checkCookieLife(request, response);
         if (isCookieActive) {
             Fitness service = fitNess(request, response);
@@ -218,11 +218,20 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
             String res = GooglefitConstant.HTML_BEGIN;
             String activityName = null;
             for (DataSource ds : dataSourcesList) {
-              //  if (ds.getDataStreamName().equals("top_level")) {
-                    activityName = ds.getDataType().getName().substring(11, ds.getDataType().getName().length());
-                    res = res + "<a  href=\"/saveandshow/datastreamid/" + ds.getDataStreamId() + "/activitytpye/" + activityName + "\">" + activityName + "</a>\r\n"
+            	 if (!ds.getDataStreamName().equals("top_level") && !ds.getDataStreamName().equals("user_input")){
+                   
+            		 String name=null;
+                     
+                     if(ds.getDataStreamName().equals("merged")) {
+                     	name=ds.getDataType().getName().substring(11, ds.getDataType().getName().length());
+                     	 
+                     }
+                     else
+                     	name=ds.getDataStreamName().replace("merge_", " ");
+            		
+                    res = res + "<a  href=\"/saveandshow/datastreamid/" + ds.getDataStreamId() + "/activitytpye/" + activityName + "\">" + name + "</a>\r\n"
                             + "		<br>";
-               // }
+               }
             }
             res = res + GooglefitConstant.HTML_END;
             return res;
@@ -235,7 +244,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
 
     @Override
     public ListDataPointChangesResponse saveAndShowActivityTypeData(HttpServletRequest request, HttpServletResponse response, String dataStreamId, String activityType) throws Exception {
-        log.info("Inside saveAndShowActivityTypeData");
+        //log.info("Inside saveAndShowActivityTypeData");
         boolean isCookieActive = checkCookieLife(request, response);
         if (isCookieActive) {
             Fitness service = fitNess(request, response);
@@ -247,7 +256,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
             userDataStream.setDataStream(ds);
             IndexCoordinates indices = IndexCoordinates.of(activityType + "_datastream");
             eRestTemplate.save(userDataStream, indices);
-            log.info("Saved DataStream in db");
+          //  log.info("Saved DataStream in db");
             return ds;
         } else {
             response.sendRedirect("/signin");
@@ -258,15 +267,13 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
 
     @Override
     public ListDataPointChangesResponse getDataPointChanges(HttpServletRequest request, HttpServletResponse response, String id) throws Exception {
-        log.info("Inside getDataPointChanges");
+        //log.info("Inside getDataPointChanges");
         boolean isCookieActive = checkCookieLife(request, response);
         if (isCookieActive) {
             Fitness service = fitNess(request, response);
             String dataStreamId = id;
-            //Fitness.Users.DataSources.DataPointChanges.List dataPointChangesRes=service.users().dataSources().dataPointChanges().list("me", dataStreamId);
+            
             Fitness.Users.DataSources.DataPointChanges.List dataPointChangesRes = service.users().dataSources().dataPointChanges().list("me", dataStreamId);
-
-            //ListDataPointChangesResponse ds=dataPointChangesRes.execute();
             ListDataPointChangesResponse ds = dataPointChangesRes.execute();
 
             return ds;
@@ -279,22 +286,30 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
 
     @Override
     public String getDataSets(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        log.info("Inside getDataSets");
+        //log.info("Inside getDataSets");
         boolean isCookieActive = checkCookieLife(request, response);
         if (isCookieActive) {
-            log.info("Inside getDataSets()");
-            Fitness service = fitNess(request, response);
+          //  log.info("Inside getDataSets()");
             List<DataSource> dataSources = getDetailsDataSources(request, response).getDataSource();
             String res = GooglefitConstant.HTML_BEGIN;
             String activityDataType = null;
             for (DataSource Ds : dataSources) {
-               // if (Ds.getDataStreamName().equals("top_level")) {
+            	 if (!Ds.getDataStreamName().equals("top_level") && !Ds.getDataStreamName().equals("user_input")){
                     System.out.println("DataStreamName:" + Ds.getDataStreamName());
-                    activityDataType = Ds.getDataType().getName().substring(11, Ds.getDataType().getName().length());
+                    
+                   
+                    String name=null;
+                    
+                    if(Ds.getDataStreamName().equals("merged")) {
+                    	name=Ds.getDataType().getName().substring(11, Ds.getDataType().getName().length());
+                    	 
+                    }
+                    else
+                    	name=Ds.getDataStreamName().replace("merge_", " ");
                     System.out.println("DataType:" + activityDataType);
-                    res = res + "<a  href=\"/getDataSets/datastreamid/" + Ds.getDataStreamId() + "/activityType/" + activityDataType + "\">" + activityDataType + "</a>\r\n"
+                    res = res + "<a  href=\"/getDataSets/datastreamid/" + Ds.getDataStreamId() + "/activityType/" + activityDataType + "\">" + name + "</a>\r\n"
                             + "		<br>";
-                //}
+                }
 
             }
             res = res + GooglefitConstant.HTML_END;
@@ -308,7 +323,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
 
     @Override
     public Dataset getDataSetsByFiltering(HttpServletRequest request, HttpServletResponse response, String id, String type) throws Exception {
-        log.info("Inside getDataSetsByFiltering");
+        //log.info("Inside getDataSetsByFiltering");
         boolean isCookieActive = checkCookieLife(request, response);
         if (isCookieActive) {
             Fitness service = fitNess(request, response);
@@ -324,7 +339,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
             userDataset.setDataSet(ds);
             IndexCoordinates indices = IndexCoordinates.of(type + "_datasets");
             eRestTemplate.save(userDataset, indices);
-            log.info("DataSets saved into Elasticsearch.");
+          //  log.info("DataSets saved into Elasticsearch.");
             return ds;
         } else {
             response.sendRedirect("/signin");
@@ -336,7 +351,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
 
     @Override
     public String getListOfDataPointChanges(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        log.info("Inside getListOfDataPointChanges");
+        //log.info("Inside getListOfDataPointChanges");
         boolean isCookieActive = checkCookieLife(request, response);
         if (isCookieActive) {
             Fitness service = fitNess(request, response);
@@ -345,13 +360,22 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
             String activityDataType = null;
 
             for (DataSource Ds : dataSources) {
-                //if (Ds.getDataStreamName().equals("top_level")) {
+                if (!Ds.getDataStreamName().equals("top_level") && !Ds.getDataStreamName().equals("user_input")){
                     System.out.println("DataStreamName:" + Ds.getDataStreamName());
-                    activityDataType = Ds.getDataType().getName().substring(11, Ds.getDataType().getName().length());
+                 
+                    String name=null;
+                  
+                    if(Ds.getDataStreamName().equals("merged")) {
+                    	name=Ds.getDataType().getName().substring(11, Ds.getDataType().getName().length());
+                    	 
+                    }
+                    else
+                    	name=Ds.getDataStreamName().replace("merge_", " ");
+                    System.out.println("name......"+name);
                     System.out.println("DataType:" + activityDataType);
-                    res = res + "<a  href=\"/getDataPointChanges/datastreamid/" + Ds.getDataStreamId() + "/activityType/" + activityDataType + "\">" + activityDataType + "</a>\r\n"
+                    res = res + "<a  href=\"/getDataPointChanges/datastreamid/" + Ds.getDataStreamId() + "/activityType/" + activityDataType + "\">" + name + "</a>\r\n"
                             + "		<br>";
-               // }
+                }
             }
             res = res + GooglefitConstant.HTML_END;
             return res;
@@ -365,7 +389,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
 
     @Override
     public ListDataPointChangesResponse getDataPointChangesByFiltering(HttpServletRequest request, HttpServletResponse response, String id, String type) throws Exception {
-        log.info("Inside getDataPointChangesByFiltering");
+        //log.info("Inside getDataPointChangesByFiltering");
         boolean isCookieActive = checkCookieLife(request, response);
         if (isCookieActive) {
             Fitness service = fitNess(request, response);
@@ -374,14 +398,14 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
             ListDataPointChangesResponse ds = dataPointChangesRes.execute();
 
             /* ElasticDB upload */
-            log.info("ListDataPointChangesResponse extracted from GoogleFit");
+          //  log.info("ListDataPointChangesResponse extracted from GoogleFit");
             UserListDataPointChanges userListDataPointChange = new UserListDataPointChanges();
             userListDataPointChange.setListDataPointChangesRes(ds);
             IndexCoordinates indices = IndexCoordinates.of(type + "_lastdatapointchanges");
             System.out.println(userListDataPointChange.toString());
             eRestTemplate.save(userListDataPointChange, indices);
 
-            log.info("DataSets saved into Elasticsearch.");
+            //log.info("DataSets saved into Elasticsearch.");
             return ds;
         } else {
             response.sendRedirect("/signin");
@@ -393,7 +417,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
 
     @Override
     public List<Dataset> getDataSetsByAggregate(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        log.info("Inside getDataSetsByAggregate");
+        //log.info("Inside getDataSetsByAggregate");
         boolean isCookieActive = checkCookieLife(request, response);
         if (isCookieActive) {
             Fitness service = fitNess(request, response);
@@ -428,7 +452,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
     }
 
     private Fitness fitNess(HttpServletRequest request, HttpServletResponse response) throws Exception {
-        log.info("Inside fitNess");
+        //log.info("Inside fitNess");
         Cookie[] cookies = request.getCookies();
         Cookie loginCookie = null;
         for (Cookie cookie : cookies) {
@@ -449,7 +473,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
     }
 
     private boolean checkCookieLife(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        log.info("Inside checkCookieLife");
+        //log.info("Inside checkCookieLife");
         Cookie[] cookies = request.getCookies();
         Cookie loginCookie = null;
         if (cookies != null) {
