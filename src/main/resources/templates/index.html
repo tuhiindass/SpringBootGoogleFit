@@ -4,12 +4,32 @@
 <link href="webjars/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
 <link href="css/style.css" rel="stylesheet">
 <script src="webjars/bootstrap/3.3.6/js/bootstrap.min.js"></script>
-<script src="webjars/jquery/1.9.1/jquery.min.js"></script>        
+<script src="webjars/jquery/1.9.1/jquery.min.js"></script>   
+ <style>
+.bg{
+  background-image: url('images/1366_2000.jpeg');
+   
+    background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+    height: 100%;
+    margin:0;
+}
+body {
+    margin: 0;
+}
+
+</style>      
 </head>
 <title>Fitness</title>
 <body>
-<center><img th:src="@{/images/googlefit1.png}" alt="image" width="300" height="200"></center></br>
-<center><a href="/signin">Google Sign in</a></center>
+<div class="bg">
+<div class="image">
+<a href="/signin"><img th:src="@{/images/google-signin-button-1024x260.png}"  height="80" style="position: absolute; top: 550; left: 770;"></a>
+</div>
+
+</div>
+
 
 </body>
 </html>
