@@ -1,14 +1,17 @@
 package com.example.googlefit.googlefit.model;
 
+import com.google.api.services.fitness.model.Value;
 import lombok.Data;
 import lombok.ToString;
+
+import java.util.List;
 
 @Data
 @ToString
 public class UserDetails {
 	String name;
 	String email;
-	
+
 	public String getName() {
 		return name;
 	}

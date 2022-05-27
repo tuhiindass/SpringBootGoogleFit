@@ -99,7 +99,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 			"https://www.googleapis.com/auth/userinfo.profile");
 
 	UserDetails userDetails = new UserDetails();
-	
+
 	@PostConstruct
 	public void init() {
 		try {
@@ -382,13 +382,26 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI{
 				long endTimeMillis = endTimenanos/convertToMillis;
 				dp.setStartTimeNanos(startTimeMillis);
 				dp.setEndTimeNanos(endTimeMillis);
+
 			}
 			/* ElasticDB upload */
-			UserDataset userDataset = new UserDataset();
-			userDataset.setDataSet(ds);
-			IndexCoordinates indices=IndexCoordinates.of(type+"_datasets");
-			eRestTemplate.save(userDataset,indices);
-			log.info("DataSets saved into Elasticsearch.");
+			//UserDataset userDataset = new UserDataset();
+			//userDataset.setDataSet(ds);
+			ActivityMinutes activityMinutes = new ActivityMinutes();
+			for(DataPoint dp:dataPoint){
+
+				activityMinutes.setActivityMinutes(Collections.singletonList(dp));
+				IndexCoordinates indices=IndexCoordinates.of(type+"_datasetstesting");
+                activityMinutes.setName(userDetails.getName());
+				activityMinutes.setEmail(userDetails.getEmail());
+				eRestTemplate.save(activityMinutes,indices);
+				System.out.println(activityMinutes);
+
+
+			}
+//			IndexCoordinates indices=IndexCoordinates.of(type+"_datasetstest");
+//			eRestTemplate.save(ds,indices);
+//			log.info("DataSets saved into Elasticsearch.");
 			return ds;
 		}else {
 			response.sendRedirect("/signin");
