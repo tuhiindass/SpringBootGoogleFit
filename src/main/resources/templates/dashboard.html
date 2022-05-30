@@ -4,42 +4,17 @@
 <link href="webjars/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
 <link href="css/style.css" rel="stylesheet">
 <script src="webjars/bootstrap/3.3.6/js/bootstrap.min.js"></script>
-<script src="webjars/jquery/1.9.1/jquery.min.js"></script>  
-<style>.container{text-align:center}</style>      
-
-<style>
-
-.bg{
-  background-image: url('images/Google-Fit-vs-Apple-Fitness.jpg');
-   
-    background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-    height: 100%;
-    margin:0;
-}
-body {
-    margin: 0;
-}
-
-</style>
-
+<script src="webjars/jquery/1.9.1/jquery.min.js"></script>        
 </head>
 <title>Fitness</title>
 <body>
+<center><img th:src="@{/images/googlefit.jpeg}" alt="image" width="600" height="300"></center>
 
-<div class="bg">
-<font>
-
-<p style="position: absolute; top: 400; font-size:30px; font-family:verdana; color:black; " ><a href="/rawdatasources">>>Click to see  Raw DataSources</a><br>
+<center><a href="/rawdatasources">Click to see  Raw DataSources</a></center>
 <!--  <center><a href="/datasources">List of DataSources</a></center>-->
 <!-- <center><a href="/activitytype">List of Activity Type</a></center>-->
-<a href="/datasets">>>Activities from Mid Night to Current Time.</a><br>
-<a href="/datapointchanges">>>List of Activity Type</a><br>
-<a href="/datasetsbyaggregate">>> Aggregated Activities from Mid Night to Current Time</a></p>
-</font>
-</div>
-
-
+<center><a href="/datasets">Activities from Mid Night to Current Time.</a></center>
+<center><a href="/datapointchanges">List of Activity Type</a></center>
+<center><a href="/datasetsbyaggregate"> Aggregated Activities from Mid Night to Current Time</a></center>
 </body>
 </html>

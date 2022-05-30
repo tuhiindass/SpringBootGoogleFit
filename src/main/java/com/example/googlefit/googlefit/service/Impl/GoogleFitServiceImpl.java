@@ -310,6 +310,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
                     }
                     else
                     	name=Ds.getDataStreamName().replace("merge_", " ");
+                    
                     System.out.println("DataType:" + activityDataType);
                     res = res + "<a  href=\"/getDataSets/datastreamid/" + Ds.getDataStreamId() + "/activityType/" + activityDataType + "\">" + name + "</a>\r\n"
                             + "		<br>";
