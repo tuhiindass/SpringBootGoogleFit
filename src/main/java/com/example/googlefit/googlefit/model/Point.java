@@ -10,8 +10,8 @@ import java.util.List;
 @Data
 @Slf4j
 @ToString
-public class ActivityMinutes extends UserDetails{
+public class Point extends UserDetails {
     String name;
     String email;
-    List<DataPoint> activityMinutes;
+    List<DataPoint> Point;
 }
