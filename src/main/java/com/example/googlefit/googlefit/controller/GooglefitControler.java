@@ -72,27 +72,13 @@ public class GooglefitControler {
 
 	}
 
-	@GetMapping(value= {"/datasources"})
-	public String getDataSources(HttpServletRequest request, HttpServletResponse response) throws Exception {
-		return googleFitSvc.getDataSources(request, response);
-	}
 	
-	@GetMapping(value= {"/activitytype"})
-	public String getActivityTypeList(HttpServletRequest request, HttpServletResponse response) throws Exception {
-		return googleFitSvc.getActivityTypeList(request, response);
-	}
 	
-	@GetMapping(value= {"/saveandshow/datastreamid/{id}/activitytpye/{type}"})
-	public ListDataPointChangesResponse saveAndShowActivityType(HttpServletRequest request, HttpServletResponse response,
-																@PathVariable String id, @PathVariable String type) throws Exception {
-		return googleFitSvc.saveAndShowActivityTypeData(request, response, id, type);
-	}
+	
+	
+	
 
-	@GetMapping(value={"/getDataStream/{id}"})
-	public ListDataPointChangesResponse getDataPoints(HttpServletRequest request, HttpServletResponse response,
-			@PathVariable String id) throws Exception {
-		return googleFitSvc.getDataPointChanges(request, response, id);
-	}
+	
 
 	@GetMapping(value={"/datasets"})
 	public String getDataSets(HttpServletRequest request, HttpServletResponse response) throws Exception {

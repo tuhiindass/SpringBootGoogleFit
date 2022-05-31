@@ -17,7 +17,7 @@ public interface GoogleFitServiceI {
 
 	ListDataSourcesResponse getDetailsDataSources(HttpServletRequest request, HttpServletResponse response) throws Exception;
 
-	String getDataSources(HttpServletRequest request, HttpServletResponse response) throws Exception;
+	//String getDataSources(HttpServletRequest request, HttpServletResponse response) throws Exception;
 
 	String getDataSets(HttpServletRequest request, HttpServletResponse response) throws Exception;
 
@@ -27,11 +27,11 @@ public interface GoogleFitServiceI {
 
 	String getListOfDataPointChanges(HttpServletRequest request, HttpServletResponse response) throws Exception;
 
-	ListDataPointChangesResponse getDataPointChanges(HttpServletRequest request, HttpServletResponse response, String id) throws Exception;
+	//ListDataPointChangesResponse getDataPointChanges(HttpServletRequest request, HttpServletResponse response, String id) throws Exception;
 
-	String getActivityTypeList(HttpServletRequest request, HttpServletResponse response) throws Exception;
+	//String getActivityTypeList(HttpServletRequest request, HttpServletResponse response) throws Exception;
 
-	ListDataPointChangesResponse saveAndShowActivityTypeData(HttpServletRequest request, HttpServletResponse response, String dataStreamId, String activityType) throws Exception;
+	//ListDataPointChangesResponse saveAndShowActivityTypeData(HttpServletRequest request, HttpServletResponse response, String dataStreamId, String activityType) throws Exception;
 
 	void googleSignIn(HttpServletRequest request, HttpServletResponse response) throws Exception;
 
