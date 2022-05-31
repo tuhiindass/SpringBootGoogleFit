@@ -312,7 +312,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
       //  log.info("Inside getDataSetsByFiltering");
     	  System.out.println("nextTime="+nextStartTime);
         boolean isCookieActive = checkCookieLife(request, response);
-    eRestTemplate.
+    
     if (isCookieActive) {
         	
             Fitness service = fitNess(request, response);
