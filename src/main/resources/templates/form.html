@@ -4,26 +4,16 @@
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-
     <title>UserForm</title>
 </head>
 <body>
 <center><img th:src="@{/images/googlefit1.png}" alt="image" width="300" height="200"></center>
-
 <center>
     <div class="container mt-5">
         <form action="/datasets" method="post">
-            <!--  <div class="mb-3">
-           <label for="exampleInputEmail1" class="form-label">Email address</label>
-           <input type="email" class="form-control" id="exampleInputEmail1"  name="email" placeholder="Enter your email Here"  aria-describedby="emailHelp">
-
-         </div>
-
-         <button type="submit" class="btn btn-success">Submit</button>-->
             <p>
                 <label>Enter StartDateTime : <input type="datetime-local" name="startTime"
                                                     placeholder="yyyy-MM-dd HH:mm:ss"/></label>
@@ -42,7 +32,5 @@
         </form>
     </div>
 </center>
-
-
 </body>
 </html>
