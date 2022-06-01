@@ -24,7 +24,6 @@ import java.util.List;
 @Slf4j
 public class GooglefitControler {
 
-
     @Autowired
     GoogleFitServiceI googleFitSvc;
 
@@ -113,8 +112,6 @@ public class GooglefitControler {
 		return googleFitSvc.getDataSetsByFiltering(request, response, id, type, startDateTime, endDateTime);
 	}
 
-  
-
     @GetMapping(value = {"/datapointchanges"})
     public String getDataPoints(HttpServletRequest request, HttpServletResponse response) throws Exception {
         return googleFitSvc.getListOfDataPointChanges(request, response);
@@ -129,5 +126,4 @@ public class GooglefitControler {
     public List<Dataset> getDataSetsByAggregate(HttpServletRequest request, HttpServletResponse response) throws Exception {
         return googleFitSvc.getDataSetsByAggregate(request, response);
     }
-
 }

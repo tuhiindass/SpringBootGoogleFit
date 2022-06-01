@@ -16,11 +16,7 @@ public interface GoogleFitServiceI {
 
     ListDataSourcesResponse getDetailsDataSources(HttpServletRequest request, HttpServletResponse response) throws Exception;
 
-
     String getDataSources(HttpServletRequest request, HttpServletResponse response) throws Exception;
-
-
-  //  String getDataSets(HttpServletRequest request, HttpServletResponse response) throws Exception;
 
     List<Dataset> getDataSetsByAggregate(HttpServletRequest request, HttpServletResponse response) throws Exception;
 
@@ -28,17 +24,13 @@ public interface GoogleFitServiceI {
 
     String getListOfDataPointChanges(HttpServletRequest request, HttpServletResponse response) throws Exception;
 
-
     ListDataPointChangesResponse getDataPointChanges(HttpServletRequest request, HttpServletResponse response, String id) throws Exception;
 
     String getActivityTypeList(HttpServletRequest request, HttpServletResponse response) throws Exception;
 
     ListDataPointChangesResponse saveAndShowActivityTypeData(HttpServletRequest request, HttpServletResponse response, String dataStreamId, String activityType) throws Exception;
 
-
     void googleSignIn(HttpServletRequest request, HttpServletResponse response) throws Exception;
-
-    //Dataset getDataSetsByFiltering(HttpServletRequest request, HttpServletResponse response, String id, String type)  throws Exception;
 
     ListDataPointChangesResponse getDataPointChangesByFiltering(HttpServletRequest request,
                                                                 HttpServletResponse response, String id, String type) throws Exception;
@@ -48,7 +40,5 @@ public interface GoogleFitServiceI {
 
 	Dataset getDataSetsByFiltering(HttpServletRequest request, HttpServletResponse response, String id, String type,
 			String startDateTime, String endDateTime) throws Exception;
-
-	//Dataset getDataSetsByFiltering(HttpServletRequest request, HttpServletResponse response, String id, String type);
 
 }
