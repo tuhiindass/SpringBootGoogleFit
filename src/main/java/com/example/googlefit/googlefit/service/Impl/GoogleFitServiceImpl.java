@@ -368,15 +368,32 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
             }
             /* ElasticDB upload */
             //UserDataset userDataset = new UserDataset();
-            //userDataset.setDataSet(ds);
             Point point = new Point();
             for (DataPoint dp : dataPoint) {
 
-                point.setPoint(Collections.singletonList(dp));
-                //IndexCoordinates indices = IndexCoordinates.of(type + "_datasetstesting");
-                IndexCoordinates indices = IndexCoordinates.of("alyf");
                 point.setName(userDetails.getName());
                 point.setEmail(userDetails.getEmail());
+                point.setDataTypeName(dp.getDataTypeName());
+                point.setOriginDataSourceId(dp.getOriginDataSourceId());
+                point.setStartTimeDate(dp.getStartTimeNanos().toString());
+                point.setEndTimeDate(dp.getEndTimeNanos().toString());
+                point.setModifiedTimeDate(dp.getModifiedTimeMillis().toString());
+                for (com.google.api.services.fitness.model.Value va : dp.getValue()) {
+                    System.out.println(va.getFpVal());
+                    if (va.getFpVal() != null) {
+                        point.setValue(va.getFpVal());
+                    } else if (va.getIntVal() != null) {
+                        point.setValue(Double.valueOf(va.getIntVal()));
+
+                    }
+                }
+
+                //ncompatible types. Found: 'java.util.Map.Entry', required: 'com.google.api.services.fitness.model.Value'
+                System.out.println(point);
+
+                //IndexCoordinates indices = IndexCoordinates.of(type + "_datasetstesting");
+                IndexCoordinates indices = IndexCoordinates.of("alyfdatetest");
+
                 eRestTemplate.save(point, indices);
 
             }
@@ -550,5 +567,17 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
         return false;
     }
 
-
+//    private static String nonoToTimeStamp(Long nanoFormate){
+//        String milliFormate=String.valueOf(nanoFormate);
+//        Date date = new Date(Long.parseLong(milliFormate));
+//
+//
+//        DateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+//        format.setTimeZone(TimeZone.getTimeZone("Asia/Kolkata"));
+//        String formatted = format.format(date);
+////        System.out.println(formatted);
+////        Timestamp timeStamp = Timestamp.valueOf(formatted);
+//
+//        return formatted;
+//    }
 }
