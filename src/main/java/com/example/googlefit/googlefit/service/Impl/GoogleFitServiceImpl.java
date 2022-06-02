@@ -62,6 +62,9 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
     @Value("${session.timeout}")
     private int sessionLife;
 
+    @Value("${test.DatabaseName}")
+    private String DatabaseName;
+
     private GoogleAuthorizationCodeFlow flow;
 
     private static final String APPLICATION_NAME = "fitNess";
@@ -388,6 +391,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
 
             }
             /* ElasticDB upload */
+           // List<DataPoint> dataPoint = ds.getPoint();
             Point point = new Point();
             for (DataPoint dp : dataPoint) {
 
@@ -409,10 +413,11 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
                 }
 
                 //ncompatible types. Found: 'java.util.Map.Entry', required: 'com.google.api.services.fitness.model.Value'
-                System.out.println(point);
+                //System.out.println(point);
 
                 //IndexCoordinates indices = IndexCoordinates.of(type + "_datasetstesting");
-                IndexCoordinates indices = IndexCoordinates.of("alyfdatetest");
+               // IndexCoordinates indices = IndexCoordinates.of("alyfdatetest");
+                 IndexCoordinates indices = IndexCoordinates.of(DatabaseName);
 
                 eRestTemplate.save(point, indices);
 
