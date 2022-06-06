@@ -162,7 +162,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
             UserDataSourceList dataSourceList = new UserDataSourceList();
             dataSourceList.set_lDataSource(_lDs);
             IndexCoordinates indices = IndexCoordinates.of("datasources");
-            System.out.println(dataSourceList.toString());
+            // System.out.println(dataSourceList.toString());
             eRestTemplate.save(dataSourceList, indices);
             log.info("DataSource saved into Elasticsearch.");
             ListDataSourcesResponse Ds = dataSources.execute();
@@ -189,7 +189,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
             }
             res = res + GooglefitConstant.HTML_END;
 
-            System.out.println(Ds);
+            // System.out.println(Ds);
             return res;
         } else {
             response.sendRedirect("/signin");
@@ -272,7 +272,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
                 long endMilliTime = endTime / convertToMillis;
                 dp.setEndTimeNanos(endMilliTime);
                 dp.setStartTimeNanos(startMilliTime);
-                System.out.println("time:" + endMilliTime);
+                // System.out.println("time:" + endMilliTime);
             }
             List<DataPoint> insertedDatapoint = ds.getInsertedDataPoint();
             for (DataPoint dp : insertedDatapoint) {
@@ -284,7 +284,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
                 long endMilliTime = endTime / convertToMillis;
                 dp.setEndTimeNanos(endMilliTime);
                 dp.setStartTimeNanos(startMilliTime);
-                System.out.println("time:" + endMilliTime);
+                //System.out.println("time:" + endMilliTime);
             }
 
             return ds;
@@ -298,8 +298,8 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
     public String getDataSets(HttpServletRequest request, HttpServletResponse response, String startDateTime, String endDateTime) throws Exception {
         log.info("Inside getDataSets");
         boolean isCookieActive = checkCookieLife(request, response);
-        System.out.println("startDateTime " + startDateTime);
-        System.out.println("endDateTime  " + endDateTime);
+        //System.out.println("startDateTime " + startDateTime);
+        //System.out.println("endDateTime  " + endDateTime);
 
 
         //System.out.println("Time in millis  "+timeInMillis);
@@ -317,9 +317,9 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
                 Date enddate = sdf.parse(endDateTime.replace("T", " "));
                 long startTimeNanos = startdate.getTime() * convertToMillis;
                 long endTimeNanos = enddate.getTime() * convertToMillis;
-                System.out.println("StarTime in millis " + startTimeNanos);
+                //System.out.println("StarTime in millis " + startTimeNanos);
 
-                System.out.println("EndTime in millis  " + endTimeNanos);
+                //System.out.println("EndTime in millis  " + endTimeNanos);
                 startTimeString = String.valueOf(startTimeNanos);
                 endTimeString = String.valueOf(endTimeNanos);
 
@@ -331,7 +331,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
             for (DataSource Ds : dataSources) {
                 if (!Ds.getDataStreamId().contains("com.google.android.fit") && !Ds.getDataStreamId().contains("com.google.android.apps.fitness")) {
                     // if (!Ds.getDataStreamName().equals("top_level") && !Ds.getDataStreamName().equals("user_input")) {
-                    System.out.println("DataStreamName:" + Ds.getDataStreamName());
+                    //System.out.println("DataStreamName:" + Ds.getDataStreamName());
 
                     String name = null;
 
@@ -342,8 +342,8 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
                         name = Ds.getDataStreamName() + " -" + Ds.getDevice().getModel();
                     } else
                         name = Ds.getDataStreamName().replace("merge_", " ");
-                    System.out.println("name......" + name);
-                    System.out.println("DataType:" + activityDataType);
+                    //System.out.println("name......" + name);
+                    // System.out.println("DataType:" + activityDataType);
                     res = res + "<a  href=\"/getDataSets/datastreamid/" + Ds.getDataStreamId() + "/activityType/" + activityDataType + "/startDateTime/" + startTimeString + "/endDateTime/" + endTimeString + "\">" + name + "</a>\r\n"
                             + "		<br>";
                 }
@@ -369,14 +369,14 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
             String endTimeString = endDateTime;
 
             String datasetId = startTimeString + "-" + endTimeString;
-            System.out.println("datasetId: " + datasetId);
+            // System.out.println("datasetId: " + datasetId);
             Fitness.Users.DataSources.Datasets.Get dataSet = service.users().dataSources().datasets().get("me", id, datasetId);
             Dataset ds = dataSet.execute();
 
 
             Long maxEndTimeNs = ds.getMaxEndTimeNs();
             Long maxEndTimeMilli = maxEndTimeNs / convertToMillis;
-            System.out.println("maxEndTime:" + maxEndTimeMilli);
+            //System.out.println("maxEndTime:" + maxEndTimeMilli);
             ds.setMaxEndTimeNs(maxEndTimeMilli);
             Long minStartTimeMili = ds.getMinStartTimeNs() / convertToMillis;
             ds.setMinStartTimeNs(minStartTimeMili);
@@ -391,7 +391,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
 
             }
             /* ElasticDB upload */
-           // List<DataPoint> dataPoint = ds.getPoint();
+            // List<DataPoint> dataPoint = ds.getPoint();
             Point point = new Point();
             for (DataPoint dp : dataPoint) {
 
@@ -403,7 +403,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
                 point.setEndTimeDate(dp.getEndTimeNanos().toString());
                 point.setModifiedTimeDate(dp.getModifiedTimeMillis().toString());
                 for (com.google.api.services.fitness.model.Value va : dp.getValue()) {
-                    System.out.println(va.getFpVal());
+                    //   System.out.println(va.getFpVal());
                     if (va.getFpVal() != null) {
                         point.setValue(va.getFpVal());
                     } else if (va.getIntVal() != null) {
@@ -416,8 +416,8 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
                 //System.out.println(point);
 
                 //IndexCoordinates indices = IndexCoordinates.of(type + "_datasetstesting");
-               // IndexCoordinates indices = IndexCoordinates.of("alyfdatetest");
-                 IndexCoordinates indices = IndexCoordinates.of(DatabaseName);
+                // IndexCoordinates indices = IndexCoordinates.of("alyfdatetest");
+                IndexCoordinates indices = IndexCoordinates.of(DatabaseName);
 
                 eRestTemplate.save(point, indices);
 
@@ -444,7 +444,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
             for (DataSource Ds : dataSources) {
                 if (!Ds.getDataStreamId().contains("com.google.android.fit") && !Ds.getDataStreamId().contains("com.google.android.apps.fitness")) {
 
-                    System.out.println("DataStreamName:" + Ds.getDataStreamName());
+                    // System.out.println("DataStreamName:" + Ds.getDataStreamName());
 
                     String name = null;
 
@@ -455,8 +455,8 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
                         name = Ds.getDataStreamName() + " -" + Ds.getDevice().getModel();
                     } else
                         name = Ds.getDataStreamName().replace("merge_", " ");
-                    System.out.println("name......" + name);
-                    System.out.println("DataType:" + activityDataType);
+                    // System.out.println("name......" + name);
+                    // System.out.println("DataType:" + activityDataType);
                     res = res + "<a  href=\"/getDataPointChanges/datastreamid/" + Ds.getDataStreamId() + "/activityType/" + activityDataType + "\">" + name + "</a>\r\n"
                             + "		<br>";
                 }
@@ -489,7 +489,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
                 long endMilliTime = endTime / convertToMillis;
                 dp.setEndTimeNanos(endMilliTime);
                 dp.setStartTimeNanos(startMilliTime);
-                System.out.println("time:" + endMilliTime);
+                //System.out.println("time:" + endMilliTime);
             }
             List<DataPoint> insertedDatapoint = ds.getInsertedDataPoint();
             for (DataPoint dp : insertedDatapoint) {
@@ -502,7 +502,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
                 long endMilliTime = endTime / convertToMillis;
                 dp.setEndTimeNanos(endMilliTime);
                 dp.setStartTimeNanos(startMilliTime);
-                System.out.println("time:" + endMilliTime);
+                //System.out.println("time:" + endMilliTime);
             }
             /* ElasticDB upload */
             log.info("ListDataPointChangesResponse extracted from GoogleFit");
@@ -530,11 +530,11 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
             Fitness service = fitNess(request, response);
             Fitness.Users.DataSources.List ds = service.users().dataSources().list("me");
             List<DataSource> dataSources = ds.execute().getDataSource();
-            System.out.println("Data Sources: " + dataSources);
+            // System.out.println("Data Sources: " + dataSources);
             List<Dataset> dataSets = new ArrayList<Dataset>();
             for (DataSource Ds : dataSources) {
                 String dataStreamId = Ds.getDataStreamId();
-                System.out.println("Data Stream Id:" + dataStreamId);
+                //System.out.println("Data Stream Id:" + dataStreamId);
                 AggregateRequest aggregateRequest = new AggregateRequest();
                 aggregateRequest.setAggregateBy(Collections.singletonList(
                         new AggregateBy()
@@ -549,7 +549,7 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
                     dataSets.addAll(dataset);
                 }
             }
-            System.out.println("Datasets: " + dataSets);
+            // System.out.println("Datasets: " + dataSets);
             return dataSets;
         } else {
             response.sendRedirect("/signin");

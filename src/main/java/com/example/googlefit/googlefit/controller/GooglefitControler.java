@@ -35,7 +35,7 @@ public class GooglefitControler {
         if (credential == null) {
             mav.setViewName("index");
         } else {
-            mav.setViewName("dashboard");
+            mav.setViewName("show-data");
         }
         return mav;
     }
@@ -52,14 +52,14 @@ public class GooglefitControler {
             googleFitSvc.saveToken(code, request, response);
         }
         ModelAndView modelAndView = new ModelAndView();
-        modelAndView.setViewName("dashboard");
+        modelAndView.setViewName("show-data");
         return modelAndView;
     }
 
     @GetMapping(value = {"/dashboard"})
     public ModelAndView dashboard(HttpServletRequest request, HttpServletResponse response) throws Exception {
         ModelAndView modelAndView = new ModelAndView();
-        modelAndView.setViewName("dashboard");
+        modelAndView.setViewName("show-data");
         return modelAndView;
     }
 
