@@ -41,4 +41,5 @@ public interface GoogleFitServiceI {
     Dataset getDataSetsByFiltering(HttpServletRequest request, HttpServletResponse response, String id, String type,
                                    String startDateTime, String endDateTime) throws Exception;
 
+    List<Dataset> getDataSetsForActivityType(HttpServletRequest request, HttpServletResponse response, String[] activityTypes) throws Exception;
 }

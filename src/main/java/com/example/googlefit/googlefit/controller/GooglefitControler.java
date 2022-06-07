@@ -8,12 +8,7 @@ import com.google.api.services.fitness.model.ListDataPointChangesResponse;
 import com.google.api.services.fitness.model.ListDataSourcesResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
@@ -126,5 +121,10 @@ public class GooglefitControler {
     @GetMapping(value = {"/datasetsbyaggregate"})
     public List<Dataset> getDataSetsByAggregate(HttpServletRequest request, HttpServletResponse response) throws Exception {
         return googleFitSvc.getDataSetsByAggregate(request, response);
+    }
+
+    @PostMapping(value = "/getDataSetsForActivityType")
+    public List<Dataset> getDataSetsForActivityType(HttpServletRequest request, HttpServletResponse response, @RequestParam("activityType")String[] activityTypes ) throws Exception {
+        return googleFitSvc.getDataSetsForActivityType(request, response, activityTypes);
     }
 }

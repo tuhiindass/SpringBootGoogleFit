@@ -3,7 +3,7 @@
 
     </head>
     <body>
-        <style>
+    <style>
             
             * {
             font-family: Arial, Helvetica, sans-serif;
@@ -85,36 +85,33 @@
                 display: inline-block;
                 font-size: 16px;
                 }
-            </style>
-        
-        <h1>Please select data that you agree to share</h1>    
-        <label class="container">Health
-            <input type="checkbox" checked="checked">
-            <span class="checkmark"></span>
-          </label>
-          <br/>
-          <label class="container">Activity
-            <input type="checkbox">
-            <span class="checkmark"></span>
-          </label>
-          <br/>
-          <label class="container">Location
-            <input type="checkbox">
-            <span class="checkmark"></span>
-          </label>
-          <br/>
-          <label class="container">Nutrition
-            <input type="checkbox">
-            <span class="checkmark"></span>
-          </label>
 
-          <form action="/">
-            <input class="button" type="submit" value="Submit">
-          </form>
+    </style>
 
+    <h1>Please select data that you agree to share</h1>
+    <form action="/getDataSetsForActivityType" method="post">
+        <label class="container">
+            <input type="checkbox" checked="checked" name="activityType" value="Health">Health
+            <span class="checkmark"></span>
+        </label>
+        <br/>
+        <label class="container">
+            <input type="checkbox" name="activityType" value="Activity">Activity
+            <span class="checkmark"></span>
+        </label>
+        <br/>
+        <label class="container">
+            <input type="checkbox" name="activityType" value="Location">Location
+            <span class="checkmark"></span>
+        </label>
+        <br/>
+        <label class="container">
+            <input type="checkbox" name="activityType" value="Nutrition">Nutrition
+            <span class="checkmark"></span>
+        </label>
+        <input class="button" type="submit" value="Submit">
+    </form>
 
-
-          
 
     </body>
 
