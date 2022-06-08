@@ -361,55 +361,55 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
             Dataset ds = dataSet.execute();
 
 
-            Long maxEndTimeNs = ds.getMaxEndTimeNs();
-            Long maxEndTimeMilli = maxEndTimeNs / convertToMillis;
-            //System.out.println("maxEndTime:" + maxEndTimeMilli);
-            ds.setMaxEndTimeNs(maxEndTimeMilli);
-            Long minStartTimeMili = ds.getMinStartTimeNs() / convertToMillis;
-            ds.setMinStartTimeNs(minStartTimeMili);
-            List<DataPoint> dataPoint = ds.getPoint();
-            for (DataPoint dp : dataPoint) {
-                Long endTimenanos = dp.getEndTimeNanos();
-                Long startTimenanos = dp.getStartTimeNanos();
-                long startTimeMillis = startTimenanos / convertToMillis;
-                long endTimeMillis = endTimenanos / convertToMillis;
-                dp.setStartTimeNanos(startTimeMillis);
-                dp.setEndTimeNanos(endTimeMillis);
-
-            }
-            /* ElasticDB upload */
-            // List<DataPoint> dataPoint = ds.getPoint();
-            Point point = new Point();
-            for (DataPoint dp : dataPoint) {
-
-                point.setName(userDetails.getName());
-                point.setEmail(userDetails.getEmail());
-                point.setDataTypeName(dp.getDataTypeName());
-                point.setOriginDataSourceId(dp.getOriginDataSourceId());
-                point.setStartTimeDate(dp.getStartTimeNanos().toString());
-                point.setEndTimeDate(dp.getEndTimeNanos().toString());
-                point.setModifiedTimeDate(dp.getModifiedTimeMillis().toString());
-                for (com.google.api.services.fitness.model.Value va : dp.getValue()) {
-                    //   System.out.println(va.getFpVal());
-                    if (va.getFpVal() != null) {
-                        point.setValue(va.getFpVal());
-                    } else if (va.getIntVal() != null) {
-                        point.setValue(Double.valueOf(va.getIntVal()));
-
-                    }
-                }
-
-                //ncompatible types. Found: 'java.util.Map.Entry', required: 'com.google.api.services.fitness.model.Value'
-                //System.out.println(point);
-
-                //IndexCoordinates indices = IndexCoordinates.of(type + "_datasetstesting");
-                // IndexCoordinates indices = IndexCoordinates.of("alyfdatetest");
-                IndexCoordinates indices = IndexCoordinates.of(DatabaseName);
-
-                eRestTemplate.save(point, indices);
-
-            }
-            log.info("Points saved into Elasticsearch.");
+//            Long maxEndTimeNs = ds.getMaxEndTimeNs();
+//            Long maxEndTimeMilli = maxEndTimeNs / convertToMillis;
+//            //System.out.println("maxEndTime:" + maxEndTimeMilli);
+//            ds.setMaxEndTimeNs(maxEndTimeMilli);
+//            Long minStartTimeMili = ds.getMinStartTimeNs() / convertToMillis;
+//            ds.setMinStartTimeNs(minStartTimeMili);
+//            List<DataPoint> dataPoint = ds.getPoint();
+//            for (DataPoint dp : dataPoint) {
+//                Long endTimenanos = dp.getEndTimeNanos();
+//                Long startTimenanos = dp.getStartTimeNanos();
+//                long startTimeMillis = startTimenanos / convertToMillis;
+//                long endTimeMillis = endTimenanos / convertToMillis;
+//                dp.setStartTimeNanos(startTimeMillis);
+//                dp.setEndTimeNanos(endTimeMillis);
+//
+//            }
+//            /* ElasticDB upload */
+//            // List<DataPoint> dataPoint = ds.getPoint();
+//            Point point = new Point();
+//            for (DataPoint dp : dataPoint) {
+//
+//                point.setName(userDetails.getName());
+//                point.setEmail(userDetails.getEmail());
+//                point.setDataTypeName(dp.getDataTypeName());
+//                point.setOriginDataSourceId(dp.getOriginDataSourceId());
+//                point.setStartTimeDate(dp.getStartTimeNanos().toString());
+//                point.setEndTimeDate(dp.getEndTimeNanos().toString());
+//                point.setModifiedTimeDate(dp.getModifiedTimeMillis().toString());
+//                for (com.google.api.services.fitness.model.Value va : dp.getValue()) {
+//                    //   System.out.println(va.getFpVal());
+//                    if (va.getFpVal() != null) {
+//                        point.setValue(va.getFpVal());
+//                    } else if (va.getIntVal() != null) {
+//                        point.setValue(Double.valueOf(va.getIntVal()));
+//
+//                    }
+//                }
+//
+//                //ncompatible types. Found: 'java.util.Map.Entry', required: 'com.google.api.services.fitness.model.Value'
+//                //System.out.println(point);
+//
+//                //IndexCoordinates indices = IndexCoordinates.of(type + "_datasetstesting");
+//                // IndexCoordinates indices = IndexCoordinates.of("alyfdatetest");
+//                IndexCoordinates indices = IndexCoordinates.of(DatabaseName);
+//
+//                eRestTemplate.save(point, indices);
+//
+//            }
+//            log.info("Points saved into Elasticsearch.");
             return ds;
         } else {
             response.sendRedirect("/signin");
@@ -546,11 +546,24 @@ public class GoogleFitServiceImpl implements GoogleFitServiceI {
     }
 
     @Override
-    public List<Dataset> getDataSetsForActivityType(HttpServletRequest request, HttpServletResponse response, String[] activityTypes ) throws Exception {
+    public List<Dataset> getDataSetsForActivityType(HttpServletRequest request, HttpServletResponse response, String[] activityTypes, String startDateTime, String endDateTime ) throws Exception {
+        String endTimeString = null;
+        String startTimeString = null;
+            if (startDateTime == null && endDateTime == null) {
+                startTimeString = String.valueOf(new DateTime().withTimeAtStartOfDay().getMillis() * convertToMillis);
+                endTimeString = String.valueOf(DateTime.now().getMillis() * convertToMillis);
+            } else {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+                Date startdate = sdf.parse(startDateTime.replace("T", " "));
+                Date enddate = sdf.parse(endDateTime.replace("T", " "));
+                long startTimeNanos = startdate.getTime() * convertToMillis;
+                long endTimeNanos = enddate.getTime() * convertToMillis;
+                startTimeString = String.valueOf(startTimeNanos);
+                endTimeString = String.valueOf(endTimeNanos);
+
+            }
         if (activityTypes.length > 0) {
             List<DataSource> dataSourceList = getDetailsDataSources(request, response).getDataSource();
-            String startTimeString = String.valueOf(new DateTime().withTimeAtStartOfDay().getMillis() * convertToMillis);
-            String endTimeString = String.valueOf(DateTime.now().getMillis() * convertToMillis);
             List<String> activityDataTypesList = new ArrayList<>();
             for (String activityType : activityTypes) {
                 switch (activityType) {

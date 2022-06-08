@@ -124,7 +124,7 @@ public class GooglefitControler {
     }
 
     @PostMapping(value = "/getDataSetsForActivityType")
-    public List<Dataset> getDataSetsForActivityType(HttpServletRequest request, HttpServletResponse response, @RequestParam("activityType")String[] activityTypes ) throws Exception {
-        return googleFitSvc.getDataSetsForActivityType(request, response, activityTypes);
+    public List<Dataset> getDataSetsForActivityType(HttpServletRequest request, HttpServletResponse response, @RequestParam("activityType")String[] activityTypes  ,@RequestParam("startDateTime") String startDateTime, @RequestParam("endDateTime") String endDateTime) throws Exception {
+        return googleFitSvc.getDataSetsForActivityType(request, response, activityTypes, startDateTime, endDateTime);
     }
 }
