@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
-@RestController
+//@RestController
 @Slf4j
 public class GooglefitControler {
 
@@ -123,8 +123,8 @@ public class GooglefitControler {
         return googleFitSvc.getDataSetsByAggregate(request, response);
     }
 
-    @PostMapping(value = "/getDataSetsForActivityType")
-    public List<Dataset> getDataSetsForActivityType(HttpServletRequest request, HttpServletResponse response, @RequestParam("activityType")String[] activityTypes  ,@RequestParam("startDateTime") String startDateTime, @RequestParam("endDateTime") String endDateTime) throws Exception {
-        return googleFitSvc.getDataSetsForActivityType(request, response, activityTypes, startDateTime, endDateTime);
-    }
+//    @PostMapping(value = "/getDataSetsForActivityType")
+//    public List<Dataset> getDataSetsForActivityType(HttpServletRequest request, HttpServletResponse response, @RequestParam("activityType")String[] activityTypes  ,@RequestParam("startDateTime") String startDateTime, @RequestParam("endDateTime") String endDateTime) throws Exception {
+//        return googleFitSvc.getDataSetsForActivityType(request, response, activityTypes, startDateTime, endDateTime);
+//    }
 }
