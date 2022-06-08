@@ -1,6 +1,7 @@
 package com.example.googlefit.googlefit.service.Impl;
 
 import com.example.googlefit.googlefit.GooglefitConstant;
+import com.example.googlefit.googlefit.model.Point;
 import com.example.googlefit.googlefit.model.UserDataSourceList;
 import com.example.googlefit.googlefit.model.UserDetails;
 import com.example.googlefit.googlefit.service.GoogleFitServiceINew;
@@ -14,6 +15,7 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.client.util.store.MemoryDataStoreFactory;
 import com.google.api.services.fitness.Fitness;
+import com.google.api.services.fitness.model.DataPoint;
 import com.google.api.services.fitness.model.DataSource;
 import com.google.api.services.fitness.model.Dataset;
 import com.google.api.services.fitness.model.ListDataSourcesResponse;
@@ -191,50 +193,50 @@ public class GoogleFitServiceImplNew implements GoogleFitServiceINew {
 
 
             /* ElasticDB upload */
-//            Long maxEndTimeNs = ds.getMaxEndTimeNs();
-//            Long maxEndTimeMilli = maxEndTimeNs / convertToMillis;
-//            //System.out.println("maxEndTime:" + maxEndTimeMilli);
-//            ds.setMaxEndTimeNs(maxEndTimeMilli);
-//            Long minStartTimeMili = ds.getMinStartTimeNs() / convertToMillis;
-//            ds.setMinStartTimeNs(minStartTimeMili);
-//            List<DataPoint> dataPoint = ds.getPoint();
-//            for (DataPoint dp : dataPoint) {
-//                Long endTimenanos = dp.getEndTimeNanos();
-//                Long startTimenanos = dp.getStartTimeNanos();
-//                long startTimeMillis = startTimenanos / convertToMillis;
-//                long endTimeMillis = endTimenanos / convertToMillis;
-//                dp.setStartTimeNanos(startTimeMillis);
-//                dp.setEndTimeNanos(endTimeMillis);
-//
-//            }
-//
-//            // List<DataPoint> dataPoint = ds.getPoint();
-//            Point point = new Point();
-//            for (DataPoint dp : dataPoint) {
-//
-//                point.setName(userDetails.getName());
-//                point.setEmail(userDetails.getEmail());
-//                point.setDataTypeName(dp.getDataTypeName());
-//                point.setOriginDataSourceId(dp.getOriginDataSourceId());
-//                point.setStartTimeDate(dp.getStartTimeNanos().toString());
-//                point.setEndTimeDate(dp.getEndTimeNanos().toString());
-//                point.setModifiedTimeDate(dp.getModifiedTimeMillis().toString());
-//                for (com.google.api.services.fitness.model.Value va : dp.getValue()) {
-//                    //   System.out.println(va.getFpVal());
-//                    if (va.getFpVal() != null) {
-//                        point.setValue(va.getFpVal());
-//                    } else if (va.getIntVal() != null) {
-//                        point.setValue(Double.valueOf(va.getIntVal()));
-//
-//                    }
-//                }
-//
-//                IndexCoordinates indices = IndexCoordinates.of(DatabaseName);
-//
-//                eRestTemplate.save(point, indices);
-//
-//            }
-//            log.info("Points saved into Elasticsearch.");
+            Long maxEndTimeNs = ds.getMaxEndTimeNs();
+            Long maxEndTimeMilli = maxEndTimeNs / convertToMillis;
+            //System.out.println("maxEndTime:" + maxEndTimeMilli);
+            ds.setMaxEndTimeNs(maxEndTimeMilli);
+            Long minStartTimeMili = ds.getMinStartTimeNs() / convertToMillis;
+            ds.setMinStartTimeNs(minStartTimeMili);
+            List<DataPoint> dataPoint = ds.getPoint();
+            for (DataPoint dp : dataPoint) {
+                Long endTimenanos = dp.getEndTimeNanos();
+                Long startTimenanos = dp.getStartTimeNanos();
+                long startTimeMillis = startTimenanos / convertToMillis;
+                long endTimeMillis = endTimenanos / convertToMillis;
+                dp.setStartTimeNanos(startTimeMillis);
+                dp.setEndTimeNanos(endTimeMillis);
+
+            }
+
+            // List<DataPoint> dataPoint = ds.getPoint();
+            Point point = new Point();
+            for (DataPoint dp : dataPoint) {
+
+                point.setName(userDetails.getName());
+                point.setEmail(userDetails.getEmail());
+                point.setDataTypeName(dp.getDataTypeName());
+                point.setOriginDataSourceId(dp.getOriginDataSourceId());
+                point.setStartTimeDate(dp.getStartTimeNanos().toString());
+                point.setEndTimeDate(dp.getEndTimeNanos().toString());
+                point.setModifiedTimeDate(dp.getModifiedTimeMillis().toString());
+                for (com.google.api.services.fitness.model.Value va : dp.getValue()) {
+                    //   System.out.println(va.getFpVal());
+                    if (va.getFpVal() != null) {
+                        point.setValue(va.getFpVal());
+                    } else if (va.getIntVal() != null) {
+                        point.setValue(Double.valueOf(va.getIntVal()));
+
+                    }
+                }
+
+                IndexCoordinates indices = IndexCoordinates.of(DatabaseName);
+
+                eRestTemplate.save(point, indices);
+
+            }
+            log.info("Points saved into Elasticsearch.");
             return ds;
         } else {
             response.sendRedirect("/signin");
