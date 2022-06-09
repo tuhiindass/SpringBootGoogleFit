@@ -233,6 +233,7 @@ public class GoogleFitService implements IGoogleFitService {
             if (activityDataTypesList.contains(dataSource.getDataType().getName())) {
                 count++;
                 if (count > 280) {
+                    System.gc();
                     TimeUnit.SECONDS.sleep(61);
                     count = 0;
                 }
