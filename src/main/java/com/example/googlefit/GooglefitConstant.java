@@ -1,4 +1,4 @@
-package com.example.googlefit.googlefit;
+package com.example.googlefit;
 
 import java.util.Arrays;
 import java.util.List;

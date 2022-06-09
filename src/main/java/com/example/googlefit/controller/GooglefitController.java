@@ -1,7 +1,7 @@
-package com.example.googlefit.googlefit.controller;
+package com.example.googlefit.controller;
 
 
-import com.example.googlefit.googlefit.service.GoogleFitServiceINew;
+import com.example.googlefit.service.IGoogleFitService;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.services.fitness.model.Dataset;
 import lombok.extern.slf4j.Slf4j;
@@ -15,16 +15,16 @@ import java.util.List;
 
 @RestController
 @Slf4j
-public class GooglefitControlerNew {
+public class GooglefitController {
 
     @Autowired
-    GoogleFitServiceINew googleFitSvc;
+    IGoogleFitService googleFitSvc;
 
 
     @RequestMapping("/index")
-    public ModelAndView home() throws Exception {
+    public ModelAndView home(HttpServletRequest request, HttpServletResponse response) throws Exception {
         ModelAndView mav = new ModelAndView();
-        Credential credential = googleFitSvc.getCredential();
+        Credential credential = googleFitSvc.getCredential(request, response);
         if (credential == null) {
             mav.setViewName("index");
         } else {
@@ -42,7 +42,7 @@ public class GooglefitControlerNew {
     public ModelAndView saveAuthorizationCode(HttpServletRequest request, HttpServletResponse response) throws Exception {
         String code = request.getParameter("code");
         if (code != null) {
-            googleFitSvc.saveToken(code, request, response);
+            googleFitSvc.saveToken(request, response, code);
         }
         ModelAndView modelAndView = new ModelAndView();
         modelAndView.setViewName("show-data");

@@ -1,4 +1,4 @@
-package com.example.googlefit.googlefit.model;
+package com.example.googlefit.model;
 
 import lombok.Data;
 import lombok.ToString;
@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 @Data
 @Slf4j
 @ToString
-public class Point extends UserDetails {
+public class Point {
     String name;
     String email;
     String dataTypeName;
