@@ -229,18 +229,12 @@ public class GoogleFitService implements IGoogleFitService {
         List<Dataset> datasetList = new ArrayList<>();
         List<Point> pointsListMaster = new ArrayList<>();
         int count = 0;
-        DateTime quotaStartTime = DateTime.now();
         for (DataSource dataSource : dataSourceList) {
             if (activityDataTypesList.contains(dataSource.getDataType().getName())) {
-                DateTime quotaCurrentTime = DateTime.now();
                 count++;
-                if (count > 250) {
-                    int diff = Seconds.secondsBetween(quotaStartTime, quotaCurrentTime).getSeconds();
-                    if (diff < 60) {
-                        TimeUnit.SECONDS.sleep(diff + 10);
-                        quotaStartTime = DateTime.now();
-                        count = 0;
-                    }
+                if (count > 280) {
+                    TimeUnit.SECONDS.sleep(61);
+                    count = 0;
                 }
                 Map<String, Object> dataSetAndPointMap = getDataSetsAndPointMapByFiltering(service,
                         dataSource.getDataStreamId(), startTimeString, endTimeString, loginCookie.getName(),
