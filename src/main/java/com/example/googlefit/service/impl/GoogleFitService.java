@@ -42,6 +42,7 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
@@ -227,8 +228,20 @@ public class GoogleFitService implements IGoogleFitService {
         HashMap<String, Object> savePointsInDBMap = new HashMap<>();
         List<Dataset> datasetList = new ArrayList<>();
         List<Point> pointsListMaster = new ArrayList<>();
+        int count = 0;
+        DateTime quotaStartTime = DateTime.now();
         for (DataSource dataSource : dataSourceList) {
             if (activityDataTypesList.contains(dataSource.getDataType().getName())) {
+                DateTime quotaCurrentTime = DateTime.now();
+                count++;
+                if (count > 250) {
+                    int diff = Seconds.secondsBetween(quotaStartTime, quotaCurrentTime).getSeconds();
+                    if (diff < 60) {
+                        TimeUnit.SECONDS.sleep(diff + 10);
+                        quotaStartTime = DateTime.now();
+                        count = 0;
+                    }
+                }
                 Map<String, Object> dataSetAndPointMap = getDataSetsAndPointMapByFiltering(service,
                         dataSource.getDataStreamId(), startTimeString, endTimeString, loginCookie.getName(),
                         loginCookie.getValue());
@@ -249,7 +262,7 @@ public class GoogleFitService implements IGoogleFitService {
             });
             DateTime endTime = DateTime.now();
             log.info("Batch Insertion Ended");
-            log.info("Total Time Taken in secs - " + Seconds.secondsBetween(startTime, endTime));
+            log.info("Total Time Taken in secs - " + Seconds.secondsBetween(startTime, endTime).getSeconds());
         }
         savePointsInDBMap.put("dataSetList", datasetList);
         savePointsInDBMap.put("isPointsAvailable", isPointsAvailable);
