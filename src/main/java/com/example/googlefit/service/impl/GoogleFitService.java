@@ -36,6 +36,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -64,7 +66,13 @@ public class GoogleFitService implements IGoogleFitService {
     private int sessionLife;
 
     @Value("${elasticsearch.databaseName}")
-    private String DatabaseName;
+    private String databaseName;
+
+    @Value("${session.maxRequestsPerMinutePerUser}")
+    private int maxRequestsPerMinutePerUser;
+
+    @Value("${elasticsearch.batchSize}")
+    private int batchSize;
 
     private GoogleAuthorizationCodeFlow flow;
     private static final String APPLICATION_NAME = "fitNess";
@@ -132,14 +140,14 @@ public class GoogleFitService implements IGoogleFitService {
         JsonObject userData = JsonParser.parseString(res.body()).getAsJsonObject();
         String userName = userData.get("name").getAsString();
         String userEmail = userData.get("email").getAsString();
-        log.info(userData.get("name").getAsString());
-        log.info(userData.get("email").getAsString());
-
-        flow.createAndStoreCredential(googleTokenResponse, userEmail);
-        log.info(googleTokenResponse.getAccessToken());
+        log.info(userName);
+        log.info(userEmail);
         String user = request.getParameter(GFITLOGINUSEREMAIL);
+        String nameEmailEncoded = URLEncoder.encode((userName + "#" + userEmail), "UTF-8");
         if (user == null) {
-            Cookie loginCookie = new Cookie(GFITLOGINUSEREMAIL, userEmail);
+            Cookie loginCookie = new Cookie(GFITLOGINUSEREMAIL, nameEmailEncoded);
+            flow.createAndStoreCredential(googleTokenResponse, nameEmailEncoded);
+            log.info(googleTokenResponse.getAccessToken());
             loginCookie.setMaxAge(sessionLife);
             response.addCookie(loginCookie);
             response.sendRedirect("/dashboard");
@@ -224,7 +232,8 @@ public class GoogleFitService implements IGoogleFitService {
         return dataSetAndPointMap;
     }
 
-    private Map<String, Object> savePointsInDB(Cookie loginCookie, Fitness service, String endTimeString, String startTimeString, List<DataSource> dataSourceList, List<String> activityDataTypesList) throws Exception {
+    private Map<String, Object> savePointsInDB(Cookie loginCookie, Fitness service, String endTimeString,
+                                               String startTimeString, List<DataSource> dataSourceList, List<String> activityDataTypesList) throws Exception {
         HashMap<String, Object> savePointsInDBMap = new HashMap<>();
         List<Dataset> datasetList = new ArrayList<>();
         List<Point> pointsListMaster = new ArrayList<>();
@@ -232,31 +241,35 @@ public class GoogleFitService implements IGoogleFitService {
         for (DataSource dataSource : dataSourceList) {
             if (activityDataTypesList.contains(dataSource.getDataType().getName())) {
                 count++;
-                if (count > 280) {
+                if (count > maxRequestsPerMinutePerUser) {
                     System.gc();
+                    log.info("Configured {} Max Requests per minute per user reached. Application will sleep for 1 minute.", maxRequestsPerMinutePerUser);
                     TimeUnit.SECONDS.sleep(61);
                     count = 0;
                 }
+                String userDetails[] = URLDecoder.decode(loginCookie.getValue(), "UTF-8").split("#");
                 Map<String, Object> dataSetAndPointMap = getDataSetsAndPointMapByFiltering(service,
-                        dataSource.getDataStreamId(), startTimeString, endTimeString, loginCookie.getName(),
-                        loginCookie.getValue());
+                        dataSource.getDataStreamId(), startTimeString, endTimeString, userDetails[0],
+                        userDetails[1]);
                 pointsListMaster.addAll((Collection<? extends Point>) dataSetAndPointMap.get("pointList"));
                 datasetList.add((Dataset) dataSetAndPointMap.get("dataSetList"));
             }
         }
         boolean isPointsAvailable = false;
-        if (pointsListMaster.size() > 0) {
+        int totalPointsSize = pointsListMaster.size();
+        if (totalPointsSize > 0) {
             isPointsAvailable = true;
             DateTime startTime = DateTime.now();
             log.info("Batch Insertion Started");
-            List<List<Point>> pointsListSubsets = Lists.partition(pointsListMaster, 10000);
+            List<List<Point>> pointsListSubsets = Lists.partition(pointsListMaster, batchSize);
             pointsListSubsets.forEach(pointListBatch -> {
-                IndexCoordinates indices = IndexCoordinates.of(DatabaseName);
+                IndexCoordinates indices = IndexCoordinates.of(databaseName);
                 eRestTemplate.save(pointListBatch, indices);
-                log.info("Batch of 10000 Points saved into Elasticsearch.");
+                System.gc();
             });
             DateTime endTime = DateTime.now();
             log.info("Batch Insertion Ended");
+            log.info("Total {} points inserted into Elasticsearch.", totalPointsSize);
             log.info("Total Time Taken in secs - " + Seconds.secondsBetween(startTime, endTime).getSeconds());
         }
         savePointsInDBMap.put("dataSetList", datasetList);
