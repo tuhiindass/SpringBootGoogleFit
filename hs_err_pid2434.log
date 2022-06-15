@@ -16,7 +16,7 @@
 
 ---------------  S U M M A R Y ------------
 
-Command Line: -agentlib:jdwp=transport=dt_socket,suspend=y,address=localhost:41479 -javaagent:/home/sirsendu/.eclipse/360744286_linux_gtk_x86_64/configuration/org.eclipse.osgi/222/0/.cp/lib/javaagent-shaded.jar -Dfile.encoding=UTF-8 com.example.googlefit.googlefit.GooglefitApplication
+Command Line: -agentlib:jdwp=transport=dt_socket,suspend=y,address=localhost:41479 -javaagent:/home/sirsendu/.eclipse/360744286_linux_gtk_x86_64/configuration/org.eclipse.osgi/222/0/.cp/lib/javaagent-shaded.jar -Dfile.encoding=UTF-8 GooglefitApplication
 
 Host: Intel(R) Core(TM) i3-3110M CPU @ 2.40GHz, 4 cores, 10G, Ubuntu 18.04.5 LTS
 Time: Fri May 20 01:22:01 2022 IST elapsed time: 3126.719052 seconds (0d 0h 52m 6s)
