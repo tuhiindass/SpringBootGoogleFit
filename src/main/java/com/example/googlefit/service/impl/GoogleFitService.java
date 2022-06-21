@@ -17,16 +17,13 @@ import com.google.api.services.fitness.model.DataPoint;
 import com.google.api.services.fitness.model.DataSource;
 import com.google.api.services.fitness.model.Dataset;
 import com.google.api.services.fitness.model.ListDataSourcesResponse;
-import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
-import org.joda.time.Seconds;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.util.StringUtils;
 
@@ -34,6 +31,9 @@ import javax.annotation.PostConstruct;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLDecoder;
@@ -155,8 +155,8 @@ public class GoogleFitService implements IGoogleFitService {
     }
 
     @Override
-    public List<Dataset> getDataSetsForActivityType(HttpServletRequest request, HttpServletResponse response,
-                                                    String[] activityTypes, String startDateTime, String endDateTime) throws Exception {
+    public List<Point> getDataSetsForActivityType(HttpServletRequest request, HttpServletResponse response,
+                                                  String[] activityTypes, String startDateTime, String endDateTime) throws Exception {
         Cookie loginCookie = getLoginCookie(request);
         boolean isCookieActive = checkCookieLife(loginCookie);
         if (isCookieActive) {
@@ -179,10 +179,11 @@ public class GoogleFitService implements IGoogleFitService {
                 if (activityTypes.length > 0) {
                     List<DataSource> dataSourceList = getDetailsDataSources(service).getDataSource();
                     List<String> activityDataTypesList = getActivityDataTypesList(activityTypes);
-                    Map<String, Object> savePointsInDBMap = savePointsInDB(loginCookie, service, endTimeString, startTimeString, dataSourceList, activityDataTypesList);
-                    if ((boolean) savePointsInDBMap.get("isPointsAvailable")) {
-                        return (List<Dataset>) savePointsInDBMap.get("dataSetList");
-                    }
+                    List<Point> savePointsInDBMap = savePointsInDB(loginCookie, service, endTimeString, startTimeString, dataSourceList, activityDataTypesList);
+//                    if ((boolean) savePointsInDBMap.get("isPointsAvailable")) {
+//                        return (List<Dataset>) savePointsInDBMap.get("dataSetList");
+//                    }
+                    return savePointsInDBMap;
                 }
             } else {
                 response.sendRedirect("/signin");
@@ -193,13 +194,56 @@ public class GoogleFitService implements IGoogleFitService {
         return new ArrayList<>();
     }
 
+    @Override
+    public String storeUserAllDetails(HttpServletRequest request, HttpServletResponse response, String[] activityTypes, String startDateTime, String endDateTime) throws Exception {
+        Cookie loginCookie = getLoginCookie(request);
+        boolean isCookieActive = checkCookieLife(loginCookie);
+        if (isCookieActive) {
+            Fitness service = fitNess(request);
+            if (service != null) {
+                String userDetails[] = URLDecoder.decode(loginCookie.getValue(), "UTF-8").split("#");
+                //String token = googleTokenResponse.getAccessToken();
+                String userDetailsAll = " UserEmail: " + userDetails[1] + " Activity: " + java.util.Arrays.toString(activityTypes) + " StartTime: " + startDateTime.toString() + " EndTime: " + endDateTime.toString() + "; ";
+                System.out.println(userDetailsAll);
+                String line = userDetailsAll;
+                try {
+                    // String fileName = userDetails[1]+".txt";
+                    //File file = new File(fileName);
+                    File file = new File("Alluserdetails.txt");
+
+                    if (!file.exists()) {
+                        file.createNewFile();
+                    }
+
+                    FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
+                    BufferedWriter bw = new BufferedWriter(fw);
+
+                    bw.write(line);
+                    bw.close();
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+
+            } else {
+                response.sendRedirect("/signin");
+            }
+        } else {
+            response.sendRedirect("/signin");
+        }
+
+        return "Done";
+    }
+
+
     private ListDataSourcesResponse getDetailsDataSources(Fitness service) throws Exception {
         Fitness.Users.DataSources.List dataSources = service.users().dataSources().list("me");
         return dataSources.execute();
     }
 
-    private Map<String, Object> getDataSetsAndPointMapByFiltering(Fitness service, String id, String startDateTime,
-                                                                  String endDateTime, String userName, String userEmail) throws Exception {
+    private List<Point> getDataSetsAndPointMapByFiltering(Fitness service, String id, String startDateTime,
+                                                          String endDateTime, String userName, String userEmail) throws Exception {
         HashMap<String, Object> dataSetAndPointMap = new HashMap<>();
         String datasetId = startDateTime + "-" + endDateTime;
         Fitness.Users.DataSources.Datasets.Get dataSet = service.users().dataSources().datasets().get("me", id, datasetId);
@@ -229,11 +273,11 @@ public class GoogleFitService implements IGoogleFitService {
         }
         dataSetAndPointMap.put("pointList", points);
         dataSetAndPointMap.put("dataSetList", ds);
-        return dataSetAndPointMap;
+        return points;
     }
 
-    private Map<String, Object> savePointsInDB(Cookie loginCookie, Fitness service, String endTimeString,
-                                               String startTimeString, List<DataSource> dataSourceList, List<String> activityDataTypesList) throws Exception {
+    private List<Point> savePointsInDB(Cookie loginCookie, Fitness service, String endTimeString,
+                                       String startTimeString, List<DataSource> dataSourceList, List<String> activityDataTypesList) throws Exception {
         HashMap<String, Object> savePointsInDBMap = new HashMap<>();
         List<Dataset> datasetList = new ArrayList<>();
         List<Point> pointsListMaster = new ArrayList<>();
@@ -248,33 +292,33 @@ public class GoogleFitService implements IGoogleFitService {
                     count = 0;
                 }
                 String userDetails[] = URLDecoder.decode(loginCookie.getValue(), "UTF-8").split("#");
-                Map<String, Object> dataSetAndPointMap = getDataSetsAndPointMapByFiltering(service,
+                List<Point> dataSetAndPointMap = getDataSetsAndPointMapByFiltering(service,
                         dataSource.getDataStreamId(), startTimeString, endTimeString, userDetails[0],
                         userDetails[1]);
-                pointsListMaster.addAll((Collection<? extends Point>) dataSetAndPointMap.get("pointList"));
-                datasetList.add((Dataset) dataSetAndPointMap.get("dataSetList"));
+                pointsListMaster.addAll(dataSetAndPointMap);
+                // datasetList.add((Dataset) dataSetAndPointMap.get("dataSetList"));
             }
         }
         boolean isPointsAvailable = false;
         int totalPointsSize = pointsListMaster.size();
         if (totalPointsSize > 0) {
             isPointsAvailable = true;
-            DateTime startTime = DateTime.now();
-            log.info("Batch Insertion Started");
-            List<List<Point>> pointsListSubsets = Lists.partition(pointsListMaster, batchSize);
-            pointsListSubsets.forEach(pointListBatch -> {
-                IndexCoordinates indices = IndexCoordinates.of(databaseName);
-                eRestTemplate.save(pointListBatch, indices);
-                System.gc();
-            });
-            DateTime endTime = DateTime.now();
-            log.info("Batch Insertion Ended");
-            log.info("Total {} points inserted into Elasticsearch.", totalPointsSize);
-            log.info("Total Time Taken in secs - " + Seconds.secondsBetween(startTime, endTime).getSeconds());
+//            DateTime startTime = DateTime.now();
+//            log.info("Batch Insertion Started");
+//            List<List<Point>> pointsListSubsets = Lists.partition(pointsListMaster, batchSize);
+//            pointsListSubsets.forEach(pointListBatch -> {
+//                IndexCoordinates indices = IndexCoordinates.of(databaseName);
+//                eRestTemplate.save(pointListBatch, indices);
+//                System.gc();
+//            });
+//            DateTime endTime = DateTime.now();
+//            log.info("Batch Insertion Ended");
+//            log.info("Total {} points inserted into Elasticsearch.", totalPointsSize);
+//            log.info("Total Time Taken in secs - " + Seconds.secondsBetween(startTime, endTime).getSeconds());
         }
         savePointsInDBMap.put("dataSetList", datasetList);
         savePointsInDBMap.put("isPointsAvailable", isPointsAvailable);
-        return savePointsInDBMap;
+        return pointsListMaster;
     }
 
     private List<String> getActivityDataTypesList(String[] activityTypes) {
