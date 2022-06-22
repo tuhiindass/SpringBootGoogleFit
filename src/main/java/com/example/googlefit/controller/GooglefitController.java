@@ -80,4 +80,11 @@ public class GooglefitController {
     public String storeUserAllDetails(HttpServletRequest request, HttpServletResponse response, @RequestParam("activityType") String[] activityTypes, @RequestParam("startDateTime") String startDateTime, @RequestParam("endDateTime") String endDateTime) throws Exception {
         return googleFitSvc.storeUserAllDetails(request, response, activityTypes, startDateTime, endDateTime);
     }
+
+//    @GetMapping(value = "/matchEmailid/email")
+////    public String matchEmailId(@RequestParam(required = false) String email){
+////
+////        return "Email id: " +email;
+////
+////    }
 }

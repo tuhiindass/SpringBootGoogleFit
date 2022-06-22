@@ -2,6 +2,8 @@ package com.example.googlefit.service.impl;
 
 import com.example.googlefit.GooglefitConstant;
 import com.example.googlefit.model.Point;
+import com.example.googlefit.model.User;
+import com.example.googlefit.repository.UserRepository;
 import com.example.googlefit.service.IGoogleFitService;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
@@ -73,6 +75,9 @@ public class GoogleFitService implements IGoogleFitService {
 
     @Value("${elasticsearch.batchSize}")
     private int batchSize;
+
+    @Autowired
+    UserRepository userRepository;
 
     private GoogleAuthorizationCodeFlow flow;
     private static final String APPLICATION_NAME = "fitNess";
@@ -203,10 +208,14 @@ public class GoogleFitService implements IGoogleFitService {
             if (service != null) {
                 String userDetails[] = URLDecoder.decode(loginCookie.getValue(), "UTF-8").split("#");
                 //String token = googleTokenResponse.getAccessToken();
-                String userDetailsAll = " UserEmail: " + userDetails[1] + " Activity: " + java.util.Arrays.toString(activityTypes) + " StartTime: " + startDateTime.toString() + " EndTime: " + endDateTime.toString() + "; ";
-                System.out.println(userDetailsAll);
-                String line = userDetailsAll;
-                try {
+
+                //String userDetailsAll = " UserEmail: " + userDetails[1] + " Activity: " + java.util.Arrays.toString(activityTypes) + " StartTime: " + startDateTime.toString() + " EndTime: " + endDateTime.toString() + "; ";
+
+
+                User user = new User(userDetails[1],userDetails[0],flow.getTokenServerEncodedUrl(),java.util.Arrays.toString(activityTypes),startDateTime,endDateTime);
+
+                userRepository.save(user);
+                /*try {
                     // String fileName = userDetails[1]+".txt";
                     //File file = new File(fileName);
                     File file = new File("Alluserdetails.txt");
@@ -224,7 +233,7 @@ public class GoogleFitService implements IGoogleFitService {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
+*/
 
             } else {
                 response.sendRedirect("/signin");
