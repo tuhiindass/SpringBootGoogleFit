@@ -84,9 +84,9 @@ public class GooglefitController {
         return googleFitSvc.storeUserAllDetails(request, response, activityTypes, startDateTime, endDateTime);
     }
 
-       @GetMapping(value = "/user/{email}")
-       public List<Point> retriveUserValue(@PathVariable("email") String email) throws Exception {
+       @GetMapping(value = "/user-info")
+       public List<Point> retriveUserValue(@RequestParam String email,@RequestParam String startTime,@RequestParam String endTime) throws Exception {
            this.email = email;
-           return googleFitSvc.getUserByEmail(email);
+           return googleFitSvc.getUserByEmail(email,startTime,endTime);
        }
 }

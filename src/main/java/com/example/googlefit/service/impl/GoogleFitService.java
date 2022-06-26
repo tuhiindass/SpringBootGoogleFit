@@ -230,7 +230,7 @@ public class GoogleFitService implements IGoogleFitService {
     }
 
 //    @Override
-    public List<Point> getUserByEmail(String email) throws Exception {
+    public List<Point> getUserByEmail(String email,String startTime,String endTime) throws Exception {
 
         Optional<User> userData= userRepository.findByEmail(email);
 
@@ -238,8 +238,8 @@ public class GoogleFitService implements IGoogleFitService {
         String name = null;
         String token = null;
         String[] activitys = null;
-        String startTime = null;
-        String endTime = null;
+        //String startTime = null;
+        //String endTime = null;
 
         if(userData.isPresent()){
             User user = userData.get();
@@ -250,8 +250,8 @@ public class GoogleFitService implements IGoogleFitService {
             activityTrim = activityStr.replace("]", "");
             activityTrim =activityTrim.replace("[","");
             activitys = activityTrim.split(",");
-            startTime = user.getStartTime();
-            endTime = user.getEndTime();
+            //startTime = user.getStartTime();
+            //endTime = user.getEndTime();
             return callGoogleDataPoint(token,activitys,startTime,endTime,email,name);
             
       }

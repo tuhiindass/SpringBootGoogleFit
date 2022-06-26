@@ -25,6 +25,6 @@ public interface IGoogleFitService {
 
     String storeUserAllDetails(HttpServletRequest request, HttpServletResponse response, String[] activityTypes, String startDateTime, String endDateTime) throws Exception;
 
-    List<Point> getUserByEmail(String email) throws Exception;
+    List<Point> getUserByEmail(String email,String startTime,String endTime) throws Exception;
 
 }
