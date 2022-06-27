@@ -21,10 +21,11 @@ public interface IGoogleFitService {
     //List<Point> getDataSetsForActivityType(HttpServletRequest request, HttpServletResponse response, String[] activityTypes, String startDateTime, String endDateTime) throws Exception;
 
     List<Point> getDataSetsForActivityType(String token,
-                                           String[] activityTypes, String startDateTime, String endDateTime,String email,String name) throws Exception;
+                                           String[] activityTypes, String startDateTime, String endDateTime, String email, String name) throws Exception;
 
     String storeUserAllDetails(HttpServletRequest request, HttpServletResponse response, String[] activityTypes, String startDateTime, String endDateTime) throws Exception;
 
-    List<Point> getUserByEmail(String email,String startTime,String endTime) throws Exception;
+    Optional<User> getUserByEmail(String email) throws Exception;
 
+    List<Point> getUserByEmailFitnessData(String email, String token, String activitys, String startTime, String endTime) throws Exception;
 }

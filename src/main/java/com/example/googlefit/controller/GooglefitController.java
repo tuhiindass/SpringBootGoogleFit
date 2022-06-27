@@ -12,7 +12,6 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -74,19 +73,26 @@ public class GooglefitController {
         return modelAndView;
     }*/
 
-  /*  @PostMapping(value = "/getDataSetsForActivityType")
-    public List<Point> getDataSetsForActivityType(HttpServletRequest request, HttpServletResponse response, @RequestParam("activityType") String[] activityTypes, @RequestParam("startDateTime") String startDateTime, @RequestParam("endDateTime") String endDateTime) throws Exception {
-        return googleFitSvc.getDataSetsForActivityType(request, response, activityTypes, startDateTime, endDateTime);
-    }
-*/
+    /*  @PostMapping(value = "/getDataSetsForActivityType")
+      public List<Point> getDataSetsForActivityType(HttpServletRequest request, HttpServletResponse response, @RequestParam("activityType") String[] activityTypes, @RequestParam("startDateTime") String startDateTime, @RequestParam("endDateTime") String endDateTime) throws Exception {
+          return googleFitSvc.getDataSetsForActivityType(request, response, activityTypes, startDateTime, endDateTime);
+      }
+  */
     @PostMapping(value = "/storeUserAllDetails")
     public String storeUserAllDetails(HttpServletRequest request, HttpServletResponse response, @RequestParam("activityType") String[] activityTypes, @RequestParam("startDateTime") String startDateTime, @RequestParam("endDateTime") String endDateTime) throws Exception {
         return googleFitSvc.storeUserAllDetails(request, response, activityTypes, startDateTime, endDateTime);
     }
 
-       @GetMapping(value = "/user-info")
-       public List<Point> retriveUserValue(@RequestParam String email,@RequestParam String startTime,@RequestParam String endTime) throws Exception {
-           this.email = email;
-           return googleFitSvc.getUserByEmail(email,startTime,endTime);
-       }
+    @GetMapping(value = "/user-token-all-info")
+    public Optional<User> getUserinfo(@RequestParam String email) throws Exception {
+        this.email = email;
+        return googleFitSvc.getUserByEmail(email);
+    }
+
+    @GetMapping(value = "/user-fitness-data-info/")
+    public List<Point> retriveUserValue(@RequestParam String email, @RequestParam String token, @RequestParam String activitys, @RequestParam String startTime, @RequestParam String endTime) throws Exception {
+        this.email = email;
+
+        return googleFitSvc.getUserByEmailFitnessData(email, token, activitys, startTime, endTime);
+    }
 }

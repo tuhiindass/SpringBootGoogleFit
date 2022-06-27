@@ -19,6 +19,10 @@ public class User {
     @Column
     private String token;
 
+
+    @Column
+    private String refreshToken;
+
     @Column
     private String activity;
 
@@ -29,6 +33,13 @@ public class User {
     private String endTime;
 
 
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
 
     public String getEmail() {
         return email;
@@ -81,11 +92,11 @@ public class User {
     public User() {
     }
 
-
-    public User(String email, String name, String token, String activity, String startTime, String endTime) {
+    public User(String email, String name, String token, String refreshToken, String activity, String startTime, String endTime) {
         this.email = email;
         this.name = name;
         this.token = token;
+        this.refreshToken = refreshToken;
         this.activity = activity;
         this.startTime = startTime;
         this.endTime = endTime;
@@ -97,6 +108,7 @@ public class User {
                 "email='" + email + '\'' +
                 ", name='" + name + '\'' +
                 ", token='" + token + '\'' +
+                ", refreshToken='" + refreshToken + '\'' +
                 ", activity='" + activity + '\'' +
                 ", startTime='" + startTime + '\'' +
                 ", endTime='" + endTime + '\'' +
