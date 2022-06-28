@@ -19,7 +19,6 @@ public class User {
     @Column
     private String token;
 
-
     @Column
     private String refreshToken;
 

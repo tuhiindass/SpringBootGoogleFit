@@ -1,9 +1,9 @@
 package com.example.googlefit.service.impl;
 
 import com.example.googlefit.GooglefitConstant;
+import com.example.googlefit.handler.UserInfoHandler;
+import com.example.googlefit.model.AddUserInfoRequest;
 import com.example.googlefit.model.Point;
-import com.example.googlefit.model.RefreshRequest;
-import com.example.googlefit.model.RefreshResponse;
 import com.example.googlefit.model.User;
 import com.example.googlefit.repository.UserRepository;
 import com.example.googlefit.service.IGoogleFitService;
@@ -29,9 +29,7 @@ import org.joda.time.DateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.thymeleaf.util.StringUtils;
 
 import javax.annotation.PostConstruct;
@@ -77,10 +75,12 @@ public class GoogleFitService implements IGoogleFitService {
 
     @Value("${elasticsearch.batchSize}")
     private int batchSize;
-    RestTemplate restTemplate = new RestTemplate();
 
     @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    UserInfoHandler userInfoHandler;
 
     private GoogleAuthorizationCodeFlow flow;
     private static final String APPLICATION_NAME = "fitNess";
@@ -223,6 +223,16 @@ public class GoogleFitService implements IGoogleFitService {
                 User user = new User(userDetails[1], userDetails[0], userDetails[2], userDetails[3], java.util.Arrays.toString(activityTypes), startDateTime, endDateTime);
 
                 userRepository.save(user);
+                AddUserInfoRequest infoRequest=new AddUserInfoRequest();
+                infoRequest.setEmail(userDetails[1]);
+                infoRequest.setName(userDetails[0]);
+                infoRequest.setToken(userDetails[2]);
+                infoRequest.setRefreshToken(userDetails[3]);
+                infoRequest.setActivity(java.util.Arrays.toString(activityTypes));
+                infoRequest.setStartTime(startDateTime);
+                infoRequest.setEndTime(endDateTime);
+
+                userInfoHandler.addUserInfo(infoRequest,"update");
 
 
             } else {
@@ -419,25 +429,32 @@ public class GoogleFitService implements IGoogleFitService {
     }
 
     // @Scheduled(fixedRate = 14400000)
-    private void updateAccessToken() {
+//    private void updateAccessToken() {
+//        log.info("Schedule Batch Refresh Starts");
+//        // extract refresh token from the h2 database
+//
+//        //send request in loop
+//        String url = "https://www.googleapis.com/oauth2/v3/token";
+//        /*RefreshTokenRequest rt = null;
+//        rt.setGrantType("refresh_token");
+//        rt.setRefreshToken("");*/
+//
+//        RefreshRequest refT = new RefreshRequest();
+//        refT.setClient_id(clientId);
+//        refT.setClient_secret(clientSecret);
+//        refT.setRefresh_token("1//0gKG0sxJ61Sb2CgYIARAAGBASNwF-L9IrsRcPgITg7mTNTLXFCZBJaB1Ic2Y679nbjOGjPO3E5D6P-KFf1PMie3Z-1cTjlHz6Duw");
+//        refT.setGrant_type("refresh_token");
+//        ResponseEntity<RefreshResponse> response = restTemplate.postForEntity(url, refT, RefreshResponse.class);
+//        log.info(response.getBody().getAccess_token());
+//        log.info(response.getBody().getToken_type());
+//        log.info(response.getBody().getId_token());
+//        log.info("Schedule Batch Refresh Ends");
+//    }
+
+    private static void addUserInfo() {
         log.info("Schedule Batch Refresh Starts");
-        // extract refresh token from the h2 database
 
-        //send request in loop
-        String url = "https://www.googleapis.com/oauth2/v3/token";
-        /*RefreshTokenRequest rt = null;
-        rt.setGrantType("refresh_token");
-        rt.setRefreshToken("");*/
-
-        RefreshRequest refT = new RefreshRequest();
-        refT.setClient_id(clientId);
-        refT.setClient_secret(clientSecret);
-        refT.setRefresh_token("1//0gKG0sxJ61Sb2CgYIARAAGBASNwF-L9IrsRcPgITg7mTNTLXFCZBJaB1Ic2Y679nbjOGjPO3E5D6P-KFf1PMie3Z-1cTjlHz6Duw");
-        refT.setGrant_type("refresh_token");
-        ResponseEntity<RefreshResponse> response = restTemplate.postForEntity(url, refT, RefreshResponse.class);
-        log.info(response.getBody().getAccess_token());
-        log.info(response.getBody().getToken_type());
-        log.info(response.getBody().getId_token());
         log.info("Schedule Batch Refresh Ends");
     }
+
 }

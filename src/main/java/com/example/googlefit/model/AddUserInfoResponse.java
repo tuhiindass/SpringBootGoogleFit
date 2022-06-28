@@ -3,7 +3,7 @@ package com.example.googlefit.model;
 import lombok.Data;
 
 @Data
-public class RefreshResponse {
+public class AddUserInfoResponse {
     String access_token;
     long expires_in;
     String scope;
