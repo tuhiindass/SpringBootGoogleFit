@@ -17,20 +17,20 @@ public class UserInfoHandler {
 
     RestTemplate restTemplate = new RestTemplate();
 
-    public void addUserInfo(AddUserInfoRequest infoRequest,String action) {
+    public void addUserInfo(AddUserInfoRequest infoRequest, String action) {
         //creating URL
-        UriComponentsBuilder uribuilder = UriComponentsBuilder.fromUriString(url+"/user_info")
+        UriComponentsBuilder uribuilder = UriComponentsBuilder.fromUriString(url + "/user_info")
                 .queryParam("action", action)
-                .queryParam("name", infoRequest.getName().replace(" ","-"));
+                .queryParam("name", infoRequest.getName().replace(" ", "-"));
 
         //Calling API
         ResponseEntity<String> response = restTemplate
                 .postForEntity(uribuilder.build().toUri(), infoRequest, String.class);
 
-        if(response.getStatusCode()== HttpStatus.OK){
-            log.info("User Added/updated successfully"+response.getBody());
-        }else {
-            log.error("Error occured "+response.getBody());
+        if (response.getStatusCode() == HttpStatus.OK) {
+            log.info("User Added/updated successfully " + response.getBody());
+        } else {
+            log.error("Error occured " + response.getBody());
         }
 
     }

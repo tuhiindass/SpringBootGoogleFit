@@ -101,36 +101,38 @@
 
 
 
+
+
     </style>
 
     <h1>Please select data with user details that you agree to store</h1>
     <form action="/storeUserAllDetails" method="post">
         <label class="container">
-            <input type="checkbox" checked="checked" name="activityType" value="Health">Health
+            <input checked="checked" name="activityType" type="checkbox" value="Health">Health
             <span class="checkmark"></span>
         </label>
         <br/>
         <label class="container">
-            <input type="checkbox" name="activityType" value="Activity">Activity
+            <input name="activityType" type="checkbox" value="Activity">Activity
             <span class="checkmark"></span>
         </label>
         <br/>
         <label class="container">
-            <input type="checkbox" name="activityType" value="Location">Location
+            <input name="activityType" type="checkbox" value="Location">Location
             <span class="checkmark"></span>
         </label>
         <br/>
         <label class="container">
-            <input type="checkbox" name="activityType" value="Nutrition">Nutrition
+            <input name="activityType" type="checkbox" value="Nutrition">Nutrition
             <span class="checkmark"></span>
         </label>
         <p>
-            <label>Enter StartDateTime : <input type="datetime-local" name="startDateTime"
-                                                placeholder="yyyy-MM-dd HH:mm:ss"/></label>
+            <label>Enter StartDateTime : <input name="startDateTime" placeholder="yyyy-MM-dd HH:mm:ss"
+                                                type="datetime-local"/></label>
         </p>
         <p>
-            <label>Enter EndDateTime: <input type="datetime-local" name="endDateTime"
-                                             placeholder="yyyy-MM-dd HH:mm:ss"/></label>
+            <label>Enter EndDateTime: <input name="endDateTime" placeholder="yyyy-MM-dd HH:mm:ss"
+                                             type="datetime-local"/></label>
         </p>
         <input class="button" type="submit" value="Submit">
     </form>
@@ -139,7 +141,7 @@
 
     <footer>
         <p>Author: Cloudcraftz<br>
-            <a href="cloudcraftz.io">cloudcraftz.io</a> @2022</p>
+            <a href="www.cloudcraftz.io">cloudcraftz.io</a> @2022</p>
     </footer>
     </body>
 

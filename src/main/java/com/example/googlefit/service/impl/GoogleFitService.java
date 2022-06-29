@@ -4,8 +4,6 @@ import com.example.googlefit.GooglefitConstant;
 import com.example.googlefit.handler.UserInfoHandler;
 import com.example.googlefit.model.AddUserInfoRequest;
 import com.example.googlefit.model.Point;
-import com.example.googlefit.model.User;
-import com.example.googlefit.repository.UserRepository;
 import com.example.googlefit.service.IGoogleFitService;
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
@@ -44,6 +42,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -52,42 +51,9 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class GoogleFitService implements IGoogleFitService {
 
-    @Autowired
-    ElasticsearchRestTemplate eRestTemplate;
-
-    @Value("${server.url}")
-    private String callbackUrl;
-
-    @Value("${clientId}")
-    private String clientId;
-
-    @Value("${clientSecret}")
-    private String clientSecret;
-
-    @Value("${session.timeout}")
-    private int sessionLife;
-
-    @Value("${elasticsearch.databaseName}")
-    private String databaseName;
-
-    @Value("${session.maxRequestsPerMinutePerUser}")
-    private int maxRequestsPerMinutePerUser;
-
-    @Value("${elasticsearch.batchSize}")
-    private int batchSize;
-
-    @Autowired
-    UserRepository userRepository;
-
-    @Autowired
-    UserInfoHandler userInfoHandler;
-
-    private GoogleAuthorizationCodeFlow flow;
     private static final String APPLICATION_NAME = "fitNess";
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
     private static final String GFITLOGINUSEREMAIL = "gfitLoginUserEmail";
-    HttpTransport httpTransport = new NetHttpTransport();
-
     private static final long convertToMillis = 1000000;
     private static final List<String> SCOPES = Arrays.asList(
             "https://www.googleapis.com/auth/fitness.activity.read",
@@ -103,6 +69,24 @@ public class GoogleFitService implements IGoogleFitService {
             "https://www.googleapis.com/auth/fitness.sleep.read",
             "https://www.googleapis.com/auth/userinfo.email",
             "https://www.googleapis.com/auth/userinfo.profile");
+    @Autowired
+    ElasticsearchRestTemplate eRestTemplate;
+    @Autowired
+    UserInfoHandler userInfoHandler;
+    HttpTransport httpTransport = new NetHttpTransport();
+    @Value("${server.url}")
+    private String callbackUrl;
+    @Value("${clientId}")
+    private String clientId;
+    @Value("${clientSecret}")
+    private String clientSecret;
+    @Value("${session.timeout}")
+    private int sessionLife;
+    @Value("${session.maxRequestsPerMinutePerUser}")
+    private int maxRequestsPerMinutePerUser;
+    @Value("${elasticsearch.batchSize}")
+    private int batchSize;
+    private GoogleAuthorizationCodeFlow flow;
 
     @PostConstruct
     public void init() {
@@ -111,7 +95,7 @@ public class GoogleFitService implements IGoogleFitService {
                     .setCredentialDataStore(new MemoryDataStoreFactory().getDataStore("tokens"))
                     .build();
         } catch (IOException e) {
-            //log.error(e.getMessage());
+            log.error(e.getMessage());
         }
     }
 
@@ -154,16 +138,12 @@ public class GoogleFitService implements IGoogleFitService {
         String userRefresToken = googleTokenResponse.getRefreshToken();
         log.info(userName);
         log.info(userEmail);
-//        log.info(userToken);
-//        log.info(userRefresToken);
-        log.info(code);
         String user = request.getParameter(GFITLOGINUSEREMAIL);
 
-        String nameEmailTokenRefresTokenEncoded = URLEncoder.encode((userName + "#" + userEmail + "#" + userToken + "#" + userRefresToken), "UTF-8");
+        String nameEmailTokenRefresTokenEncoded = URLEncoder.encode((userName + "#" + userEmail + "#" + userToken + "#" + userRefresToken), StandardCharsets.UTF_8);
         if (user == null) {
             Cookie loginCookie = new Cookie(GFITLOGINUSEREMAIL, nameEmailTokenRefresTokenEncoded);
             flow.createAndStoreCredential(googleTokenResponse, nameEmailTokenRefresTokenEncoded);
-            // log.info(googleTokenResponse.getAccessToken());
             loginCookie.setMaxAge(sessionLife);
             response.addCookie(loginCookie);
             response.sendRedirect("/dashboard");
@@ -218,12 +198,9 @@ public class GoogleFitService implements IGoogleFitService {
         if (isCookieActive) {
             Fitness service = fitNess(request);
             if (service != null) {
-                String userDetails[] = URLDecoder.decode(loginCookie.getValue(), "UTF-8").split("#");
+                String[] userDetails = URLDecoder.decode(loginCookie.getValue(), StandardCharsets.UTF_8).split("#");
 
-                User user = new User(userDetails[1], userDetails[0], userDetails[2], userDetails[3], java.util.Arrays.toString(activityTypes), startDateTime, endDateTime);
-
-                userRepository.save(user);
-                AddUserInfoRequest infoRequest=new AddUserInfoRequest();
+                AddUserInfoRequest infoRequest = new AddUserInfoRequest();
                 infoRequest.setEmail(userDetails[1]);
                 infoRequest.setName(userDetails[0]);
                 infoRequest.setToken(userDetails[2]);
@@ -232,7 +209,7 @@ public class GoogleFitService implements IGoogleFitService {
                 infoRequest.setStartTime(startDateTime);
                 infoRequest.setEndTime(endDateTime);
 
-                userInfoHandler.addUserInfo(infoRequest,"update");
+                userInfoHandler.addUserInfo(infoRequest, "update");
 
 
             } else {
@@ -245,46 +222,18 @@ public class GoogleFitService implements IGoogleFitService {
         return "Done";
     }
 
-    public Optional<User> getUserByEmail(String email) throws Exception {
-
-        Optional<User> userData = userRepository.findByEmail(email);
-
-        return userData;
-
-    }
 
     //    @Override
-    public List<Point> getUserByEmailFitnessData(String email, String token, String activitysList, String startTime, String endTime) throws Exception {
+    public List<Point> getUserByEmailFitnessData(String email, String name, String token, String activitysList, String startTime, String endTime) throws Exception {
 
-        Optional<User> userData = userRepository.findByEmail(email);
-
-        String name = null;
-        //String token = null;
         String[] activitys = null;
         activitys = activitysList.split(",");
-        //String startTime = null;
-        //String endTime = null;
-
-        if (userData.isPresent()) {
-            User user = userData.get();
-            name = user.getName();
-            //token = user.getToken();
-//            String activityStr=user.getActivity();
-//            String activityTrim;
-//            activityTrim = activityStr.replace("]", "");
-//            activityTrim =activityTrim.replace("[","");
-//            activitys = activityTrim.split(",");
-            //startTime = user.getStartTime();
-            //endTime = user.getEndTime();
-            return callGoogleDataPoint(token, activitys, startTime, endTime, email, name);
-
-        }
-
-        return new ArrayList<>();
+        log.info(email + " Call google api for data point " + activitysList);
+        return callGoogleDataPoint(token, activitys, startTime, endTime, email, name);
 
     }
 
-    public List<Point> callGoogleDataPoint(String token, String[] activitys, String startTime, String endTime, String email, String name) throws Exception {
+    private List<Point> callGoogleDataPoint(String token, String[] activitys, String startTime, String endTime, String email, String name) throws Exception {
         return getDataSetsForActivityType(token, activitys, startTime, endTime, email, name);
 
     }
@@ -371,6 +320,7 @@ public class GoogleFitService implements IGoogleFitService {
         }
         savePointsInDBMap.put("dataSetList", datasetList);
         savePointsInDBMap.put("isPointsAvailable", isPointsAvailable);
+        log.info("Job Done");
         return pointsListMaster;
     }
 
@@ -428,33 +378,5 @@ public class GoogleFitService implements IGoogleFitService {
         return cookie != null;
     }
 
-    // @Scheduled(fixedRate = 14400000)
-//    private void updateAccessToken() {
-//        log.info("Schedule Batch Refresh Starts");
-//        // extract refresh token from the h2 database
-//
-//        //send request in loop
-//        String url = "https://www.googleapis.com/oauth2/v3/token";
-//        /*RefreshTokenRequest rt = null;
-//        rt.setGrantType("refresh_token");
-//        rt.setRefreshToken("");*/
-//
-//        RefreshRequest refT = new RefreshRequest();
-//        refT.setClient_id(clientId);
-//        refT.setClient_secret(clientSecret);
-//        refT.setRefresh_token("1//0gKG0sxJ61Sb2CgYIARAAGBASNwF-L9IrsRcPgITg7mTNTLXFCZBJaB1Ic2Y679nbjOGjPO3E5D6P-KFf1PMie3Z-1cTjlHz6Duw");
-//        refT.setGrant_type("refresh_token");
-//        ResponseEntity<RefreshResponse> response = restTemplate.postForEntity(url, refT, RefreshResponse.class);
-//        log.info(response.getBody().getAccess_token());
-//        log.info(response.getBody().getToken_type());
-//        log.info(response.getBody().getId_token());
-//        log.info("Schedule Batch Refresh Ends");
-//    }
-
-    private static void addUserInfo() {
-        log.info("Schedule Batch Refresh Starts");
-
-        log.info("Schedule Batch Refresh Ends");
-    }
 
 }
