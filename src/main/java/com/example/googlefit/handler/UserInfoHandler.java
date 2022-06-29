@@ -21,7 +21,7 @@ public class UserInfoHandler {
         //creating URL
         UriComponentsBuilder uribuilder = UriComponentsBuilder.fromUriString(url + "/user_info")
                 .queryParam("action", action)
-                .queryParam("name", infoRequest.getName().replace(" ", "-"));
+                .queryParam("name", infoRequest.getName());
 
         //Calling API
         ResponseEntity<String> response = restTemplate

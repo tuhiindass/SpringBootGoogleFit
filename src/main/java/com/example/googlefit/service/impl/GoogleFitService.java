@@ -205,8 +205,8 @@ public class GoogleFitService implements IGoogleFitService {
                 infoRequest.setToken(userDetails[2]);
                 infoRequest.setRefreshToken(userDetails[3]);
                 infoRequest.setActivity(java.util.Arrays.toString(activityTypes));
-                infoRequest.setStartTime(startDateTime);
-                infoRequest.setEndTime(endDateTime);
+                infoRequest.setStartRange(startDateTime);
+                infoRequest.setEndRange(endDateTime);
 
                 userInfoHandler.addUserInfo(infoRequest, "update");
 

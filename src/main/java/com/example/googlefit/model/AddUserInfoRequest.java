@@ -11,7 +11,7 @@ public class AddUserInfoRequest {
     private String token;
     private String refreshToken;
     private String activity;
-    private String startTime;
-    private String endTime;
+    private String startRange;
+    private String endRange;
 
 }
