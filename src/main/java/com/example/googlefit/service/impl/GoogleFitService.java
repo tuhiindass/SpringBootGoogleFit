@@ -84,8 +84,7 @@ public class GoogleFitService implements IGoogleFitService {
     private int sessionLife;
     @Value("${session.maxRequestsPerMinutePerUser}")
     private int maxRequestsPerMinutePerUser;
-    @Value("${elasticsearch.batchSize}")
-    private int batchSize;
+
     private GoogleAuthorizationCodeFlow flow;
 
     @PostConstruct
