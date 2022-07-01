@@ -86,10 +86,30 @@
               font-size: 16px;
               }
                  body {
-  background-color: hsla(115, 68%, 67%, 0.3)
-         }
+            background-color: hsla(115, 68%, 67%, 0.3)
+             }
+              a:link, a:visited {
+                background-color: #f44336;
+                color: white;
+                padding: 10px 20px;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                position: relative;
+                margin-top:-18px;
+                float:right;
+                right:-5px;
+                top:15px;
+                border-radius: 50%;
 
-  footer {
+              }
+
+              a:hover, a:active {
+                background-color: red;
+              }
+
+
+          footer {
                 text-align: center;
                 padding: 3px;
                 background-color: DarkSalmon;
@@ -104,6 +124,8 @@
 
 
     </style>
+        <a href="https://myaccount.google.com/permissions?continue=https%3A%2F%2Fmyaccount.google.com%2Fsecurity%3Fhl%3Den_GB&hl=en_GB">Cancel Authorization</a>
+
 
     <h1>Please select data with user details that you agree to store</h1>
     <form action="/storeUserAllDetails" method="post">
@@ -136,12 +158,13 @@
         </p>
         <input class="button" type="submit" value="Submit">
     </form>
-    <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+    <br/>
+    <br/><br/><br/><br/><br/><br/><br/><br/><br/>
 
 
     <footer>
         <p>Author: Cloudcraftz<br>
-            <a href="www.cloudcraftz.io">cloudcraftz.io</a> @2022</p>
+            www.cloudcraftz.com @2022</p>
     </footer>
     </body>
 
