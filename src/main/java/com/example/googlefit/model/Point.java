@@ -4,8 +4,6 @@ import lombok.Data;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-
 @Data
 @Slf4j
 @ToString
@@ -17,13 +15,7 @@ public class Point {
     String endTimeDate;
     String modifiedTimeDate;
     String originDataSourceId;
-    ArrayList<Double> value;
+    Double value;
 
-    public ArrayList<Double> getValue() {
-        return value;
-    }
 
-    public void setValue(ArrayList<Double> value) {
-        this.value = value;
-    }
 }

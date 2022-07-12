@@ -20,16 +20,13 @@ import com.google.api.services.fitness.model.DataPoint;
 import com.google.api.services.fitness.model.DataSource;
 import com.google.api.services.fitness.model.Dataset;
 import com.google.api.services.fitness.model.ListDataSourcesResponse;
-import com.google.common.collect.Lists;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
-import org.joda.time.Seconds;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.util.StringUtils;
 
@@ -54,7 +51,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class GoogleFitService implements IGoogleFitService {
 
-    private static final String APPLICATION_NAME = "fitNess";
+    private static final String APPLICATION_NAME = "Alyf";
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
     private static final String GFITLOGINUSEREMAIL = "gfitLoginUserEmail";
     private static final long convertToMillis = 1000000;
@@ -258,33 +255,39 @@ public class GoogleFitService implements IGoogleFitService {
         List<Point> points = new ArrayList<>();
         for (DataPoint dp : dataPoint) {
             //Point point = new Point();
-            Point point = new Point();
-            point.setName(userName);
-            point.setEmail(userEmail);
-            point.setDataTypeName(dp.getDataTypeName());
-            point.setOriginDataSourceId(dp.getOriginDataSourceId());
-            point.setStartTimeDate(Long.toString(dp.getStartTimeNanos() / convertToMillis));
-            point.setEndTimeDate(Long.toString(dp.getEndTimeNanos() / convertToMillis));
-            point.setModifiedTimeDate(dp.getModifiedTimeMillis().toString());
-            ArrayList<Double> arValuesList = new ArrayList<>();
+
+           int count = 1;
             for (com.google.api.services.fitness.model.Value va : dp.getValue()) {
-                if (va.getFpVal() != null) {
-                    //point.setValue(va.getFpVal());
-                    arValuesList.add(va.getFpVal());
-                    //point.setValueList(arValuesList);
-                } else if (va.getIntVal() != null) {
-                   // point.setValue(Double.valueOf(va.getIntVal()));
-                    arValuesList.add(Double.valueOf(va.getIntVal()));
-                    //point.setValueList(arValuesList);
+                Point point = new Point();
+                point.setName(userName);
+                point.setEmail(userEmail);
+                if(dp.getDataTypeName().contains("blood_pressure")){
+                    point.setDataTypeName(dp.getDataTypeName()+"_"+count);
+                    count++;
+                }else{
+                    point.setDataTypeName(dp.getDataTypeName());
                 }
+                point.setOriginDataSourceId(dp.getOriginDataSourceId());
+                point.setStartTimeDate(Long.toString(dp.getStartTimeNanos() / convertToMillis));
+                point.setEndTimeDate(Long.toString(dp.getEndTimeNanos() / convertToMillis));
+                point.setModifiedTimeDate(dp.getModifiedTimeMillis().toString());
+                if (va.getFpVal() != null) {
+                    point.setValue(va.getFpVal());
+                    points.add(point);
+
+                } else if (va.getIntVal() != null) {
+                    point.setValue(Double.valueOf(va.getIntVal()));
+                    points.add(point);
+
+                }
+
             }
-            point.setValue(arValuesList);
-            points.add(point);
         }
         dataSetAndPointMap.put("pointList", points);
         dataSetAndPointMap.put("dataSetList", ds);
         return points;
     }
+
 
     private List<Point> savePointsInDB(Fitness service, String endTimeString,
                                        String startTimeString, List<DataSource> dataSourceList, List<String> activityDataTypesList, String email, String name) throws Exception {
@@ -313,18 +316,18 @@ public class GoogleFitService implements IGoogleFitService {
         int totalPointsSize = pointsListMaster.size();
         if (totalPointsSize > 0) {
             isPointsAvailable = true;
-            DateTime startTime = DateTime.now();
-            log.info("Batch Insertion Started");
-            List<List<Point>> pointsListSubsets = Lists.partition(pointsListMaster, 10000);
-            pointsListSubsets.forEach(pointListBatch -> {
-                IndexCoordinates indices = IndexCoordinates.of("testingfor");
-                eRestTemplate.save(pointListBatch, indices);
-                System.gc();
-            });
-            DateTime endTime = DateTime.now();
-            log.info("Batch Insertion Ended");
-            log.info("Total {} points inserted into Elasticsearch.", totalPointsSize);
-            log.info("Total Time Taken in secs - " + Seconds.secondsBetween(startTime, endTime).getSeconds());
+//            DateTime startTime = DateTime.now();
+//            log.info("Batch Insertion Started");
+//            List<List<Point>> pointsListSubsets = Lists.partition(pointsListMaster, 10000);
+//            pointsListSubsets.forEach(pointListBatch -> {
+//                IndexCoordinates indices = IndexCoordinates.of("testingfor");
+//                eRestTemplate.save(pointListBatch, indices);
+//                System.gc();
+//            });
+//            DateTime endTime = DateTime.now();
+//            log.info("Batch Insertion Ended");
+//            log.info("Total {} points inserted into Elasticsearch.", totalPointsSize);
+//            log.info("Total Time Taken in secs - " + Seconds.secondsBetween(startTime, endTime).getSeconds());
         }
         savePointsInDBMap.put("dataSetList", datasetList);
         savePointsInDBMap.put("isPointsAvailable", isPointsAvailable);
