@@ -101,7 +101,7 @@ public class GoogleFitService implements IGoogleFitService {
     @Override
     public void googleSignIn(HttpServletRequest request, HttpServletResponse response) throws Exception {
         GoogleAuthorizationCodeRequestUrl url = flow.newAuthorizationUrl();
-        String redirectUrl = url.setRedirectUri(callbackUrl).setAccessType("offline").setApprovalPrompt("force").build();
+        String redirectUrl = url.setRedirectUri(callbackUrl).setAccessType("offline").build();
         response.sendRedirect(redirectUrl);
     }
 
